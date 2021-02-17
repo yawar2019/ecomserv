@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("bomoserv")]
+[assembly: AssemblyTitle("ecomserv")]
 [assembly: AssemblyDescription("Web Service for bomosi")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("bomosi")]
-[assembly: AssemblyProduct("bomoserv")]
+[assembly: AssemblyProduct("ecomserv")]
 [assembly: AssemblyCopyright("Copyright © bomosi.com. 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

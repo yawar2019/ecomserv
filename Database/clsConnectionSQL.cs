@@ -9,15 +9,15 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualBasic;
 using System.Runtime.InteropServices;
 using System.Web;
-using bomoserv.Common;
+using ecomserv.Common;
 
 public class clsConnectionSQL
 {
-    public  SqlConnection getConnection()
+    public SqlConnection getConnection()
     {
         return getConnection("");
     }
-    public  string getConnectionString(string connectionString)
+    public string getConnectionString(string connectionString)
     {
         string res = "";
         try
@@ -33,12 +33,12 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("connectionstring", exp.Message, true, exp);
         }
         return res;
     }
-    public  SqlConnection getConnection(string connectionString)
+    public SqlConnection getConnection(string connectionString)
     {
         SqlConnection Sq1 = new SqlConnection();
         try
@@ -49,12 +49,12 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Establish Connection with SQL Server", exp.Message, true, exp);
         }
         return Sq1;
     }
-    public  void KillCommand(SqlCommand comm)
+    public void KillCommand(SqlCommand comm)
     {
         try
         {
@@ -64,11 +64,11 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("KillCommand", exp.Message, true, exp);
         }
     }
-    public  DataTable getDataTable(string SQLQuery, string connectionstring)
+    public DataTable getDataTable(string SQLQuery, string connectionstring)
     {
         DataTable dt = new DataTable();
         SqlCommand comm = new SqlCommand();
@@ -83,7 +83,7 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Get Data From SQL Database", exp.Message + "(query:" + SQLQuery + ")", true, exp);
         }
         finally
@@ -96,13 +96,43 @@ public class clsConnectionSQL
         }
         return dt;
     }
-    public  DataTable getDataTable(string SQLQuery)
+    public DataTable getDataTable(string SQLQuery, string connectionstring, out string res_msg)
+    {
+        DataTable dt = new DataTable();
+        SqlCommand comm = new SqlCommand();
+        SqlDataAdapter adap = new SqlDataAdapter();
+        res_msg = "";
+        try
+        {
+            comm.CommandText = SQLQuery.Trim();
+            comm.Connection = getConnection(connectionstring);
+            comm.CommandType = CommandType.Text;
+            adap.SelectCommand = comm;
+            adap.Fill(dt);
+        }
+        catch (Exception exp)
+        {
+            res_msg += getConnectionString(connectionstring) + "," + exp.ToString() + "," + SQLQuery;
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
+            clslog.Log("Get Data From SQL Database", exp.Message + "(query:" + SQLQuery + ")", true, exp);
+        }
+        finally
+        {
+            if (comm.Connection.State > 0)
+                comm.Connection.Close();
+            comm.Connection.Dispose();
+            comm.Dispose();
+            adap.Dispose();
+        }
+        return dt;
+    }
+    public DataTable getDataTable(string SQLQuery)
     {
         return getDataTable(SQLQuery, "");
     }
-    public  string ExecuteScalar(string query, SqlParameter[] SqlPar, CommandType comm_type, SqlCommand comm)
+    public string ExecuteScalar(string query, SqlParameter[] SqlPar, CommandType comm_type, SqlCommand comm)
     {
-        string res = ""; 
+        string res = "";
         try
         {
             if (comm == null)
@@ -113,17 +143,17 @@ public class clsConnectionSQL
             comm.Parameters.Clear();
             comm.Parameters.AddRange(SqlPar);
             comm.CommandType = comm_type;
-            return ExecuteScalar(query, "", comm); 
+            return ExecuteScalar(query, "", comm);
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Execute Scalar Query in SQL", exp.Message + "(query:" + query + ")", true, exp);
         }
         return res;
     }
-     
-    public  string ExecuteScalar(string query, string connectionstring)
+
+    public string ExecuteScalar(string query, string connectionstring)
     {
         string res = "";
         SqlConnection conn = getConnection(connectionstring);
@@ -143,23 +173,23 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Execute Scalar Query in SQL", exp.Message + "(query:" + query + ")", true, exp);
         }
         return res;
     }
-    public  string ExecuteScalar(string query)
+    public string ExecuteScalar(string query)
     {
         return ExecuteScalar(query, "");
     }
-    public  bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, CommandType comm_type, SqlCommand comm)
+    public bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, CommandType comm_type, SqlCommand comm)
     {
         bool res = false;
         try
         {
             if (comm == null)
             {
-                comm = new SqlCommand(query, getConnection("")); 
+                comm = new SqlCommand(query, getConnection(""));
             }
             comm.CommandText = query;
             comm.Parameters.Clear();
@@ -169,14 +199,24 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Execute Non Query in SQL with Par", exp.Message + "(query:" + query + ")", true, exp);
         }
         return res;
     }
-    public  bool ExecuteNonQuery(string query, string connectionstring)
+    public bool ExecuteNonQuery(string query, string connectionstring)
+    {
+        return ExecuteNonQuery(query, connectionstring, true);
+    }
+    public bool ExecuteNonQuery(string query, string connectionstring, bool need_log)
+    {
+        string ret_msg = "";
+        return ExecuteNonQuery(query, connectionstring, need_log, out ret_msg);
+    }
+    public bool ExecuteNonQuery(string query, string connectionstring, bool need_log, out string ret_msg)
     {
         bool res = false;
+        ret_msg = "";
         try
         {
             SqlConnection conn = getConnection(connectionstring);
@@ -189,18 +229,23 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
-            clslog.Log("Execute Non Query in SQL", exp.Message + "(query:" + query + ")", true, exp);
+            if (need_log)
+            {
+                ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
+                clslog.Log("Execute Non Query in SQL", exp.Message + "(query:" + query + ")", true, exp);
+            }
+            ret_msg = exp.ToString();
         }
         return res;
     }
-    public  bool ExecuteNonQuery(string query)
+    public bool ExecuteNonQuery(string query)
     {
         return ExecuteNonQuery(query, "");
     }
-    public  bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, string connectionstring, CommandType comm_type)
+    public bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, string connectionstring, CommandType comm_type, out string ret_msg)
     {
         bool res = false;
+        ret_msg = "";
         try
         {
             SqlConnection conn = getConnection(connectionstring);
@@ -215,16 +260,22 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Execute Non Query in SQL with Par", exp.Message + "(query:" + query + ")", true, exp);
+            ret_msg = exp.ToString();
         }
         return res;
     }
-    public  bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, string connectionstring)
+    public bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, string connectionstring, CommandType comm_type)
+    {
+        string ret_msg = "";
+        return ExecuteNonQuery(query, SqlPar, connectionstring, comm_type, out ret_msg);
+    }
+    public bool ExecuteNonQuery(string query, SqlParameter[] SqlPar, string connectionstring)
     {
         return ExecuteNonQuery(query, SqlPar, connectionstring, CommandType.Text);
     }
-    public  DataTable getDataTable(string SQLQuery, SqlParameter[] SqlPar, string connectionstring, CommandType comm_type)
+    public DataTable getDataTable(string SQLQuery, SqlParameter[] SqlPar, string connectionstring, CommandType comm_type)
     {
         DataTable dt = new DataTable();
         SqlCommand comm = new SqlCommand();
@@ -239,7 +290,7 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Get Data From SQL Database with Par", SQLQuery + "-" + exp.Message + "(query:" + SQLQuery + ")", true, exp);
         }
         finally
@@ -252,16 +303,16 @@ public class clsConnectionSQL
         }
         return dt;
     }
-    public  DataTable getDataTable(string SQLQuery, SqlParameter[] SqlPar, string connectionstring)
+    public DataTable getDataTable(string SQLQuery, SqlParameter[] SqlPar, string connectionstring)
     {
         return getDataTable(SQLQuery, SqlPar, connectionstring, CommandType.Text);
     }
     //with trans
-    public  SqlCommand GetCommandWithTransaction()
+    public SqlCommand GetCommandWithTransaction()
     {
         return GetCommandWithTransaction("");
     }
-    public  void Commit(SqlCommand comm)
+    public void Commit(SqlCommand comm)
     {
         // try
         {
@@ -272,10 +323,10 @@ public class clsConnectionSQL
         }
         //  catch (Exception exp)
         {
-            //     bomoserv.Common.clsLog.Log(true, true, true, "Commit SQL Query Execution", exp.Message, bomoserv.Common.clsLog.LOG_TYPE.DATABASE_ERROR, "", "", "", exp);
+            //     ecomserv.Common.clsLog.Log(true, true, true, "Commit SQL Query Execution", exp.Message, ecomserv.Common.clsLog.LOG_TYPE.DATABASE_ERROR, "", "", "", exp);
         }
     }
-    public  void RollBack(SqlCommand comm)
+    public void RollBack(SqlCommand comm)
     {
         try
         {
@@ -292,11 +343,11 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Roll Back SQL Query Execution", exp.Message, true, exp);
         }
     }
-    public  SqlCommand GetCommandWithTransaction(string connectionstring)
+    public SqlCommand GetCommandWithTransaction(string connectionstring)
     {
         SqlCommand comm = new SqlCommand();
         try
@@ -307,20 +358,26 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Get Command with Transaction in SQL", exp.Message + ", Connection string: " + connectionstring, true, exp);
         }
         return comm;
     }
 
-    public  bool ExecuteNonQuery(string query, SqlCommand comm)
+    public bool ExecuteNonQuery(string query, SqlCommand comm)
     {
-        return ExecuteNonQuery(query, "", comm);
+        string ret_msg = "";
+        return ExecuteNonQuery(query, "", comm, out ret_msg);
     }
-    public  bool ExecuteNonQuery(string query, string connectionstring, SqlCommand comm)
+    public bool ExecuteNonQuery(string query, SqlCommand comm, out string ret_msg)
+    {
+        return ExecuteNonQuery(query, "", comm, out ret_msg);
+    }
+    public bool ExecuteNonQuery(string query, string connectionstring, SqlCommand comm, out string ret_msg)
     {
         bool res = false;
         bool is_new_command = false;
+        ret_msg = "";
         try
         {
             if (comm == null)
@@ -341,16 +398,17 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ret_msg = exp.Message;
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Execute Non Query in SQL with Command Par", exp.Message + "(query:" + query + ")", true, exp);
         }
         return res;
     }
-    public  DataTable getDataTable(string SQLQuery, SqlCommand comm)
+    public DataTable getDataTable(string SQLQuery, SqlCommand comm)
     {
         return getDataTable(SQLQuery, "", comm);
     }
-    public  DataTable getDataTable(string SQLQuery, string connectionstring, SqlCommand comm)
+    public DataTable getDataTable(string SQLQuery, string connectionstring, SqlCommand comm)
     {
         DataTable dt = new DataTable();
         SqlDataAdapter adap = new SqlDataAdapter();
@@ -369,7 +427,7 @@ public class clsConnectionSQL
         }
         catch (Exception exp)
         {
-            bomoserv.Common.clsLog clslog = new bomoserv.Common.clsLog();
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
             clslog.Log("Get Data From SQL Database with Command as Par", exp.Message + "(query:" + SQLQuery + ")", true, exp);
         }
         finally
@@ -385,30 +443,39 @@ public class clsConnectionSQL
         }
         return dt;
     }
-    public  string ExecuteScalar(string query, SqlCommand comm)
+    public string ExecuteScalar(string query, SqlCommand comm)
     {
         return ExecuteScalar(query, "", comm);
     }
-    public  string ExecuteScalar(string query, string connectionstring, SqlCommand comm)
+    public string ExecuteScalar(string query, string connectionstring, SqlCommand comm)
     {
-        bool is_new_command = false;
-        if (comm == null)
+        try
         {
-            is_new_command = true;
-            comm = new SqlCommand(query, getConnection(connectionstring));
-        }
-        else
-            comm.CommandText = query;
-        object obj = comm.ExecuteScalar();
-        if (is_new_command)
-        {
-            if (comm.Connection.State > 0)
+            bool is_new_command = false;
+            if (comm == null)
+            {
+                is_new_command = true;
+                comm = new SqlCommand(query, getConnection(connectionstring));
+            }
+            else
+                comm.CommandText = query;
+            object obj = comm.ExecuteScalar();
+            if (is_new_command)
+            {
+                if (comm.Connection.State > 0)
+                    comm.Connection.Close();
                 comm.Connection.Close();
-            comm.Connection.Close();
-            comm.Dispose();
+                comm.Dispose();
+            }
+            if (obj == null)
+                return "";
+            return obj.ToString();
         }
-        if (obj == null)
+        catch (Exception exp)
+        {
+            ecomserv.Common.clsLog clslog = new ecomserv.Common.clsLog();
+            clslog.Log("ExecuteScalar", exp.Message + "(query:" + query + ")", true, exp);
             return "";
-        return obj.ToString();
+        }
     }
 }

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.329
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bomoserv", "bomoserv.csproj", "{1A2C40A0-6E74-4CA2-A17E-BDC73CA66315}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ecomserv", "ecomserv.csproj", "{1A2C40A0-6E74-4CA2-A17E-BDC73CA66315}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C38F6FFB-BD07-4375-B841-3E5733C665F5}
 	EndGlobalSection
 EndGlobal

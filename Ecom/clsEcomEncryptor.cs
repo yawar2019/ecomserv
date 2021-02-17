@@ -6,11 +6,11 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace ecomserv.SECURE
+namespace ecomserv.Ecom
 {
-    public class EncryptorCrypto
+    public class clsEcomEncryptor
     {
-        private readonly string passphrase = "iNhhTtrgviTTTy765432fvRGp09fXqaa";
+        private readonly string passphrase = "YHTYRwwwccc09oK65yhyhaIKIKGG6510";
         public string Encrypt(string plainText)
         {
             string res = "";
@@ -39,7 +39,7 @@ namespace ecomserv.SECURE
             }
             catch (Exception exp)
             {
-                clsCommon common = new clsCommon();
+                clsEcom common = new clsEcom();
                 common.Log("Encrypt", exp.Message + "(value=" + plainText + ")", true, exp);
             }
             return res;
@@ -64,12 +64,12 @@ namespace ecomserv.SECURE
                 // get key and iv
                 byte[] key, iv;
                 DeriveKeyAndIV(passphrase, salt, out key, out iv);
-                res= DecryptStringFromBytesAes(encryptedBytes, key, iv);
+                res = DecryptStringFromBytesAes(encryptedBytes, key, iv);
                 res = Uri.UnescapeDataString(res);
             }
             catch (Exception exp)
             {
-                clsCommon common = new clsCommon();
+                clsEcom common = new clsEcom();
                 common.Log("Decrypt", exp.Message + "(value=" + encrypted + ")", true, exp);
             }
             return res;
@@ -212,6 +212,5 @@ namespace ecomserv.SECURE
 
             return plaintext;
         }
-
     }
 }

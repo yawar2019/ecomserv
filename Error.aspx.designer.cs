@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace bomoserv
+namespace ecomserv
 {
 
 

@@ -1,1 +1,1 @@
-﻿<%@ Application Codebehind="Global.asax.cs" Inherits="bomoserv.Global" Language="C#" %>
+﻿<%@ Application Codebehind="Global.asax.cs" Inherits="ecomserv.Global" Language="C#" %>

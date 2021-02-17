@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-namespace bomoserv
+namespace ecomserv
 {
     public partial class Error : System.Web.UI.Page
     {

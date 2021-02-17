@@ -1,1 +1,0 @@
-﻿<%@ ServiceHost Language="C#" Debug="true" Service="bomoserv.bomopublic" CodeBehind="bomopublic.svc.cs" %>

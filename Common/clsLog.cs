@@ -5,59 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Data;
 
-namespace bomoserv.Common
+namespace ecomserv.Common
 {
     class clsLog
     {
-        private  List<string> LastErrors = new List<string>();
-        private  string LogFilePath = "";
+        private  List<string> LastErrors = new List<string>(); 
         public  void Log(string action, string logDesc, bool isError, Exception expp)
         {
             try
             {
+                if (logDesc == "Thread was being aborted.")
+                    return;
                 string log_msg = GetLogMessage(action, logDesc, isError, expp);
-                string query = @"INSERT INTO [aadhisof_db1].[dbo].[tbl_log]
-           ([log_name]
-           ,[log_desc]
-           ,[log_date]
-           ,[is_send_email])
-     VALUES
-           ('" + action + @"'
-           ,'" + log_msg + @"'
-           ,getdate()
-           ,'n')";
-                clsConnectionSQL conn = new clsConnectionSQL();
-                conn.ExecuteNonQuery(query);
-                if (isError)
-                {
-                    DataTable dtData = new DataTable();
-                    dtData = conn.getDataTable(@"SELECT [log_name]
-      ,[log_desc]
-      ,convert(char(20), [log_date],113) as log_date
-      ,[is_send_email]
-  FROM [aadhisof_db1].[dbo].[tbl_log] order by log_date desc");
-                    if (dtData.Rows.Count > 0)
-                    {
-                        string last_date_str = dtData.Rows[dtData.Rows.Count - 1]["log_date"].ToString().Trim();
-                        DateTime last_date = DateTime.Now;
-                        if (DateTime.TryParse(last_date_str, out last_date))
-                        {
-                            TimeSpan ts = (TimeSpan)(DateTime.Now - last_date);
-                            if (ts.TotalDays > 3)
-                            {
-                                clsCommon common = new clsCommon();
-                                string sub = "Log Data: " + dtData.Rows.Count + " item(s), gap=" + ((int)ts.TotalDays).ToString() + " day(s)";
-                                string msgbody = "";
-                                for (int i = 0; i < dtData.Rows.Count; i++)
-                                    msgbody += dtData.Rows[i]["log_date"].ToString().Trim() + " - " + dtData.Rows[i]["log_name"].ToString().Trim() + " - " + dtData.Rows[i]["log_desc"].ToString().Trim() + Environment.NewLine;
-                                if (common.alert_me(sub, msgbody))
-                                {
-                                    conn.ExecuteNonQuery("delete [aadhisof_db1].[dbo].[tbl_log]");
-                                }
-                            }
-                        }
-                    }
-                }
+                if (!isError)
+                    return;
+                string sub1 = "Log Data: "+ action;
             }
             catch (Exception exp)
             {
@@ -95,20 +57,30 @@ namespace bomoserv.Common
             string currentLogData = "";
             string expDetail = "";
             clsCommon common = new clsCommon();
+            string app_name = "";
             if (isError)
-            {
+            { 
+                try
+                {
+                    app_name = System.AppDomain.CurrentDomain.FriendlyName;
+                }
+                catch(Exception exp)
+                {
+
+                }
+                
                 if (expp != null)
                 {
                     expDetail = "at line:" + GetLineNumber(expp);
                     expDetail += expp.ToString();
 
-                    currentLogData += DateTime.Now.ToString() + " - version : " + common.version + " - Error : " + action + " - " + logDesc + " - (More: " + expDetail + ")";
+                    currentLogData += DateTime.Now.ToString() + " - "+ app_name + " - version : " + common.version + " - Error : " + action + " - " + logDesc + " - (More: " + expDetail + ")";
                 }
                 else
-                    currentLogData += DateTime.Now.ToString() + " - version : " + common.version + " - Error : " + action + " - " + logDesc + "";
+                    currentLogData += DateTime.Now.ToString() + " - " + app_name + " - version : " + common.version + " - Error : " + action + " - " + logDesc + "";
             }
             else
-                currentLogData += DateTime.Now.ToString() + " - version : " + common.version + " - Status : " + action + " - " + logDesc;
+                currentLogData += DateTime.Now.ToString() + " - " + app_name + " - version : " + common.version + " - Status : " + action + " - " + logDesc;
             return currentLogData;
         }
     }

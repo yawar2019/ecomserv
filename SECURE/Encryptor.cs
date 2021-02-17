@@ -6,7 +6,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.IO;
 
-namespace bomoserv.SECURE
+namespace ecomserv.SECURE
 {
     //Developer : Vinod Manammal
     //Creation Date : 23 June 2014

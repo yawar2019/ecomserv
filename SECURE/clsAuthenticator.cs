@@ -10,11 +10,12 @@ using System.Data.SqlClient;
 using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using System.Runtime.InteropServices;
-namespace bomoserv.SECURE
+namespace ecomserv.SECURE
 {
     public class clsAuthenticator
     {
         public string ApiKey = "iN8uyhtgrRETFRDE2432fvRGp09fXqaa";
+      
         public bool IsValidString(string val)
         {
             bool res = false;
