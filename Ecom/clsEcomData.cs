@@ -8,7 +8,7 @@ namespace ecomserv.Ecom
 {
     public class clsEcomData
     {
-    } 
+    }
     [DataContract]
     public class EcomData
     {
@@ -50,9 +50,11 @@ namespace ecomserv.Ecom
         public string data { get; set; }
         [DataMember]
         public string prod_id { get; set; }
+        [DataMember]
+        public string time_offset { get; set; }
     }
     public class EcomUserData
-    { 
+    {
         public string user_type { get; set; }
         public EcomCustomerData customer { get; set; }
         public EcomBrandData brand { get; set; }
@@ -79,31 +81,49 @@ namespace ecomserv.Ecom
     public class EcomBrandData
     {
         public string brand_id { get; set; }
-      public string store_id { get; set; }
-      public string email { get; set; }
-      public string name_owner_en { get; set; }
-      public string name_owner_ar { get; set; }
-      public string name_brand_en { get; set; }
-      public string name_brand_ar { get; set; }
-      public string brand_desc_en { get; set; }
-      public string brand_desc_ar { get; set; }
-      public string business_sector_id { get; set; }
-      public string phone { get; set; }
-      public string mobile_whatsapp { get; set; }
-      public string reg_message_to_admin { get; set; }
-      public string icon_url { get; set; }
-      public string loc_lat { get; set; }
-      public string loc_lng { get; set; }
-      public string admin_approval_status { get; set; }
-      public string admin_approval_remarks { get; set; }
-      public string need_approval_to_add_prod { get; set; }
-      public string order_by { get; set; }
-      public string allow_delivery_within_km { get; set; }
-      public string created_by { get; set; }
-      public string created_on { get; set; }
-      public string updated_by { get; set; }
-      public string updated_on { get; set; }
-      public string is_active { get; set; }
+        public string store_id { get; set; }
+        public string email { get; set; }
+        public string name_owner_en { get; set; }
+        public string name_owner_ar { get; set; }
+        public string name_brand_en { get; set; }
+        public string name_brand_ar { get; set; }
+        public string brand_desc_en { get; set; }
+        public string brand_desc_ar { get; set; }
+        public string business_sector_id { get; set; }
+        public string phone { get; set; }
+        public string mobile_whatsapp { get; set; }
+        public string reg_message_to_admin { get; set; }
+        public string icon_url { get; set; }
+        public string loc_lat { get; set; }
+        public string loc_lng { get; set; }
+        public string admin_approval_status { get; set; }
+        public string admin_approval_remarks { get; set; }
+        public string need_approval_to_add_prod { get; set; }
+        public string order_by { get; set; }
+        public string allow_delivery_within_km { get; set; }
+        public string created_by { get; set; }
+        public string created_on { get; set; }
+        public string updated_by { get; set; }
+        public string updated_on { get; set; }
+        public string is_active { get; set; }
+        public string f_name_owner { get; set; }
+        public string _name_owner { get; set; }
+        public string usiness_address_line_1 { get; set; }
+        public string usiness_address_line_2 { get; set; }
+        public string usiness_address_city { get; set; }
+        public string usiness_address_po_box_no { get; set; }
+        public string usiness_address_postcode { get; set; }
+        public string usiness_address_country { get; set; }
+
+        public string l_name_owner { get; set; }
+        public string business_address_line_1 { get; set; }
+        public string business_address_line_2 { get; set; }
+        public string business_address_city { get; set; }
+        public string business_address_po_box_no { get; set; }
+        public string business_address_country { get; set; }
+        public string business_address_postcode { get; set; }
+        public string website { get; set; }
+        public string social_media_url { get; set; }
 
     }
     public class EcomStaffData
@@ -127,6 +147,12 @@ namespace ecomserv.Ecom
         public string updated_by { get; set; }
         public string updated_on { get; set; }
         public string is_active { get; set; }
+        public string f_name { get; set; }
+        public string l_name { get; set; }
+        public string is_firebase_account_created { get; set; }
+        public string firebase_initial_pw { get; set; }
+
+
 
     }
     public class EcomAppData
@@ -178,7 +204,7 @@ namespace ecomserv.Ecom
         public string is_active { get; set; }
 
     }
-     
+
     public class EcomSearchCatItem
     {
         public string id { get; set; }
@@ -480,7 +506,7 @@ namespace ecomserv.Ecom
         public string address_id { get; set; }
         public string cust_id { get; set; }
         public string address_type { get; set; }
-        public string name { get; set; } 
+        public string name { get; set; }
         public string address { get; set; }
         public string state_region { get; set; }
         public string city { get; set; }
@@ -511,8 +537,8 @@ namespace ecomserv.Ecom
         public string is_req_for_cancel_by_customer { get; set; }
         public string current_status_key { get; set; }
         public string is_paid { get; set; }
-        public string staff_id { get; set; } 
-        public string last_row_index { get; set; } 
+        public string staff_id { get; set; }
+        public string last_row_index { get; set; }
         public EcomAddressItem delivery_address { get; set; }
         public EcomAddressItem billing_address { get; set; }
 
@@ -559,7 +585,7 @@ namespace ecomserv.Ecom
         public string created_on { get; set; }
         public string updated_by { get; set; }
         public string updated_on { get; set; }
-        public string is_active { get; set; } 
+        public string is_active { get; set; }
 
         public EcomProductData product { get; set; }
     }
@@ -619,7 +645,7 @@ namespace ecomserv.Ecom
         public string created_by_name { get; set; }
         public string updated_by_name { get; set; }
     }
-    
+
     public class EcomGiftItem
     {
         public string gift_id { get; set; }
@@ -667,7 +693,7 @@ namespace ecomserv.Ecom
         public string is_active { get; set; }
         public string created_by_name { get; set; }
         public string updated_by_name { get; set; }
-        public string last_row_index { get; set; } 
+        public string last_row_index { get; set; }
     }
     public class EcomcategoryItem
     {
@@ -715,7 +741,7 @@ namespace ecomserv.Ecom
         public string tag_id { get; set; }
         public string offer_dec_en { get; set; }
         public string offer_dec_ar { get; set; }
-        public string offer_perc { get; set; } 
+        public string offer_perc { get; set; }
         public string valid_from { get; set; }
         public string valid_to { get; set; }
         public string coupon_code { get; set; }
@@ -782,7 +808,7 @@ namespace ecomserv.Ecom
         public string updated_by_name { get; set; }
         public string updated_on { get; set; }
         public string is_active { get; set; }
-    } 
+    }
     public class EcomStaffRoleAppItem
     {
         public string role_id { get; set; }
@@ -819,9 +845,9 @@ namespace ecomserv.Ecom
         public string total_canceled_orders_count { get; set; }
     }
     public class EcomStaffHomeItem
-    { 
+    {
         public string total_processing { get; set; }
         public string total_ready_to_deliver { get; set; }
-        public string total_pending { get; set; } 
+        public string total_pending { get; set; }
     }
 }

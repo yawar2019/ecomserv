@@ -72,6 +72,7 @@ namespace ecomserv
                 string status_msg = clsecom.get_value(input.status_msg);
                 string flag = clsecom.get_value(input.flag);
                 string data = clsecom.get_value(input.data);
+                string time_offset = clsecom.get_value(input.time_offset);
                 string res_msg = "";
                 if (dev_id.Trim().Length == 0)
                 {
@@ -264,8 +265,6 @@ order by r.valid_from,r.valid_to";
       ,r.[updated_by]
  ,convert(char(20),r.[updated_on],113) as updated_on 
       ,r.[is_active]
-,esc.name_en+' '+esc.name_en as created_by_name
-,esu.name_en+' '+esu.name_en as updated_by_name
 ,r.offer_img_url
   FROM [dbo].[ecom_offer] r  
 left join ecom_staff esc on 
@@ -432,15 +431,16 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
                             }
                             string tag_id = clsecom.get_value(inData.tag_id);
                             string offer_img_url = clsecom.get_value(inData.offer_img_url);
-                            string offer_img_data = clsecom.get_value(inData.offer_img_data);
+                           // string offer_img_data = clsecom.get_value(inData.offer_img_data);
                             bool is_exist = false;
-                            offer_img_url = clsecom.EcomSavePicAndGetFileName(offer_img_data, out is_exist);
+                           // offer_img_url = clsecom.EcomSavePicAndGetFileName(offer_img_data, out is_exist);
                             string offer_id = clsecom.get_value(inData.offer_id);
                             string prod_id = clsecom.get_value(inData.prod_id);
                             string cat_id = clsecom.get_value(inData.cat_id);
                             string brand_id = clsecom.get_value(inData.brand_id);
                             string offer_by_brand_id = clsecom.get_value(inData.offer_by_brand_id);
                             string offer_dec_en = clsecom.get_value(inData.offer_dec_en);
+                           
                             if (auth.IsContainsSpecialChars(offer_dec_en))
                             {
                                 result.status_msg = "Offer Description in English should not contain special characters";
@@ -486,8 +486,8 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
            ([prod_id]
            ,[cat_id]
            ,[brand_id]
-   ,[offer_by_brand_id]
- ,[tag_id]
+           ,[offer_by_brand_id]
+            ,[tag_id]
            ,[offer_dec_en]
            ,[offer_dec_ar]
            ,[offer_perc] 
@@ -497,15 +497,15 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
            ,[created_by]
            ,[created_on] 
            ,[is_active]
-,[offer_img_url])
+           ,[offer_img_url])
      VALUES
            ('" + prod_id + @"' 
            ,'" + cat_id + @"'  
            ,'" + brand_id + @"' 
-   ,'" + offer_by_brand_id + @"' 
-    ,'" + tag_id + @"' 
+           ,'" + offer_by_brand_id + @"' 
+            ,'" + tag_id + @"' 
            ,'" + offer_dec_en + @"'  
-           ,N'" + offer_dec_ar + @"' 
+           ,'" + offer_dec_ar + @"' 
            ,'" + offer_perc + @"'  
            ,'" + valid_from + @"' 
            ,'" + valid_to + @"' 
@@ -513,7 +513,7 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
            ,'" + staff_id + @"' 
            ,getdate() 
            ,'" + is_active + @"'
-,'" + offer_img_url + "')";
+           ,'" + offer_img_url + "')";
                             if (!conn.ExecuteNonQuery(query))
                                 return result;
                             result.data = "";
@@ -1587,14 +1587,9 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
       ,r.[updated_by]
  ,convert(char(20),r.[updated_on],113) as updated_on 
       ,r.[is_active]
-,esc.name_en+' '+esc.name_en as created_by_name
-,esu.name_en+' '+esu.name_en as updated_by_name  
-  FROM [dbo].[ecom_tag] r  
-left join ecom_staff esc on 
-esc.staff_id=r.[created_by]
 
-left join ecom_staff esu on 
-esu.staff_id=r.[updated_by]
+  FROM [dbo].[ecom_tag] r  
+ 
 
 WHERE  r.[store_id]='" + store_id + @"' and 
 r.tag_id=case when '" + tag_id + "'='' then r.tag_id else '" + tag_id + "' end order by r.tag_name_en,r.tag_name_ar";
@@ -1608,10 +1603,10 @@ r.tag_id=case when '" + tag_id + "'='' then r.tag_id else '" + tag_id + "' end o
                                 item.tag_name_en = dtData.Rows[i]["tag_name_en"].ToString().Trim();
                                 item.tag_name_ar = dtData.Rows[i]["tag_name_ar"].ToString().Trim();
                                 item.created_by = dtData.Rows[i]["created_by"].ToString().Trim();
-                                item.created_by_name = dtData.Rows[i]["created_by_name"].ToString().Trim();
+                                //item.created_by_name = dtData.Rows[i]["created_by_name"].ToString().Trim();
                                 item.created_on = dtData.Rows[i]["created_on"].ToString().Trim();
                                 item.updated_by = dtData.Rows[i]["updated_by"].ToString().Trim();
-                                item.updated_by_name = dtData.Rows[i]["updated_by_name"].ToString().Trim();
+                                //item.updated_by_name = dtData.Rows[i]["updated_by_name"].ToString().Trim();
                                 item.updated_on = dtData.Rows[i]["updated_on"].ToString().Trim();
                                 item.is_active = dtData.Rows[i]["is_active"].ToString().Trim();
                                 items.Add(item);
@@ -1680,7 +1675,7 @@ r.tag_id=case when '" + tag_id + "'='' then r.tag_id else '" + tag_id + "' end o
 
                             query = @"UPDATE [dbo].[ecom_tag]
    SET  [tag_name_en] ='" + tag_name_en + @"'
-      ,[tag_name_ar] = N'" + tag_name_en + @"' 
+      ,[tag_name_ar] = N'" + tag_name_ar + @"' 
       ,[updated_by] = '" + staff_id + @"'
       ,[updated_on] =getdate()
       ,[is_active] = '" + is_active + @"'
@@ -1694,6 +1689,8 @@ r.tag_id=case when '" + tag_id + "'='' then r.tag_id else '" + tag_id + "' end o
                         }
                     case "add_tag":
                         {
+
+
                             if (clsecom.IsEmpty(token))
                             {
                                 clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
@@ -1759,7 +1756,7 @@ r.tag_id=case when '" + tag_id + "'='' then r.tag_id else '" + tag_id + "' end o
                             string cat_id = clsecom.get_value(inData.cat_id);
                             query = @"SELECT r.[cat_id]
       ,r.[store_id]
-      ,r.[name_en]
+       ,r.[name_en]
       ,r.[name_ar]
 ,r.[icon_url]
 ,r.[order_by]
@@ -1768,8 +1765,7 @@ r.tag_id=case when '" + tag_id + "'='' then r.tag_id else '" + tag_id + "' end o
       ,r.[updated_by]
  ,convert(char(20),r.[updated_on],113) as updated_on 
       ,r.[is_active]
-,esc.name_en+' '+esc.name_en as created_by_name
-,esu.name_en+' '+esu.name_en as updated_by_name  
+  
   FROM [dbo].[ecom_category] r  
 left join ecom_staff esc on 
 esc.staff_id=r.[created_by]
@@ -1778,7 +1774,7 @@ left join ecom_staff esu on
 esu.staff_id=r.[updated_by]
 
 WHERE  r.[store_id]='" + store_id + @"' and 
-r.cat_id=case when '" + cat_id + "'='' then r.cat_id else '" + cat_id + "' end order by r.name_en,r.name_ar";
+r.cat_id=case when '" + cat_id + "'='' then r.cat_id else '" + cat_id + "' end order by r.name_ar";
                             DataTable dtData = conn.getDataTable(query);
                             List<EcomcategoryItem> items = new List<EcomcategoryItem>();
                             for (int i = 0; i < dtData.Rows.Count; i++)
@@ -1791,11 +1787,11 @@ r.cat_id=case when '" + cat_id + "'='' then r.cat_id else '" + cat_id + "' end o
                                 item.icon_url = dtData.Rows[i]["icon_url"].ToString().Trim();
                                 item.order_by = dtData.Rows[i]["order_by"].ToString().Trim();
                                 item.created_by = dtData.Rows[i]["created_by"].ToString().Trim();
-                                item.created_by_name = dtData.Rows[i]["created_by_name"].ToString().Trim();
-                                item.created_on = dtData.Rows[i]["created_on"].ToString().Trim();
-                                item.updated_by = dtData.Rows[i]["updated_by"].ToString().Trim();
-                                item.updated_by_name = dtData.Rows[i]["updated_by_name"].ToString().Trim();
-                                item.updated_on = dtData.Rows[i]["updated_on"].ToString().Trim();
+                               // item.created_by_name = dtData.Rows[i]["created_by_name"].ToString().Trim();
+                               //// item.created_on = dtData.Rows[i]["created_on"].ToString().Trim();
+                               // item.updated_by = dtData.Rows[i]["updated_by"].ToString().Trim();
+                               // item.updated_by_name = dtData.Rows[i]["updated_by_name"].ToString().Trim();
+                                //item.updated_on = dtData.Rows[i]["updated_on"].ToString().Trim();
                                 item.is_active = dtData.Rows[i]["is_active"].ToString().Trim();
                                 items.Add(item);
                             }
@@ -2268,6 +2264,222 @@ and r.staff_id=case when '" + staff_id_this + "'='' then r.staff_id else '" + st
                     //==
 
                     //==
+                    case "delete_ad":
+                        {
+                            if (clsecom.IsEmpty(token))
+                            {
+                                clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
+                                return result;
+                            }
+                            string ad_id = clsecom.get_value(inData.ad_id);
+                            string photo_url_to_delete = conn.ExecuteScalar("SELECT  [img_url]  FROM [dbo].[ecom_ad] where [ad_id]='" + ad_id + "'");
+                            query = @"DELETE FROM [dbo].[ecom_ad] 
+ WHERE  ad_id='" + ad_id + "'";
+                            string ret_msg = "";
+                            if (!conn.ExecuteNonQuery(query, "", false, out ret_msg))
+                            {
+                                if (clsecom.is_fk_issue(ret_msg))
+                                    result.status_msg = "Cannot delete. Data is using in another form.";
+                                return result;
+                            }
+                            clsecom.SchDeletePic(photo_url_to_delete);
+                            result.data = "";
+                            result.token_new = clsecomauth.GetNewToken(dev_id);
+                            result.status = "SUCCESS";
+                            break;
+                        }
+                    case "update_ad":
+                        {
+                            if (clsecom.IsEmpty(token))
+                            {
+                                clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
+                                return result;
+                            }
+                            string ad_id = clsecom.get_value(inData.ad_id);
+                            string brand_id = clsecom.get_value(inData.brand_id);
+                            string txn_id = clsecom.get_value(inData.txn_id);
+                            if (clsecom.IsEmpty(txn_id))
+                                txn_id = "0";
+                            string is_animation = clsecom.get_value(inData.is_animation);
+                            string date_from = clsecom.convert_client_time_to_utc(time_offset, clsecom.get_value(inData.date_from));
+                            string date_to = clsecom.convert_client_time_to_utc(time_offset, clsecom.get_value(inData.date_to));
+                            DateTime date_from_dt = DateTime.UtcNow;
+                            DateTime date_to_dt = DateTime.UtcNow;
+                            if (!DateTime.TryParse(date_from, out date_from_dt))
+                            {
+                                result.status_msg = "Date format of From Date is not correct";
+                                return result;
+                            }
+                            if (!DateTime.TryParse(date_to, out date_to_dt))
+                            {
+                                result.status_msg = "Date format of To Date is not correct";
+                                return result;
+                            }
+                            if (date_from_dt > date_to_dt)
+                            {
+                                result.status_msg = "From date should be less than To Date";
+                                return result;
+                            }
+                            string is_paid = clsecom.get_value(inData.is_paid);
+                            if (clsecom.IsEmpty(is_paid))
+                                is_paid = "N";
+
+                            string destination_type = clsecom.get_value(inData.destination_type);
+                            string destination_value = clsecom.get_value(inData.destination_value);
+                            string order_by = clsecom.get_value(inData.order_by);
+                            string is_active = clsecom.get_value(inData.is_active);
+
+                            string img_url = clsecom.get_value(inData.img_url);
+                            string img_data = clsecom.get_value(inData.img_data);
+
+                            string admin_approval_status = "pending_approval";
+                            string admin_approval_remarks = "";
+
+                            // string icon_url = clsecom.get_value(inData.icon_url);
+                            //  string icon_data = clsecom.get_value(inData.icon_data);
+
+                            bool is_exist = false;
+                            if (clsecom.get_bool_from_yn(is_animation))
+                                img_url = clsecom.EcomSavePicAndGetFileName(img_data, true, out is_exist);
+                            else
+                                img_url = clsecom.EcomSavePicAndGetFileName(img_data, out is_exist);
+                            if (clsecom.IsEmpty(img_url))
+                            {
+                                result.status_msg = "Image failed to save";
+                                return result;
+                            }
+                            string photo_url_to_delete = "";
+                            if (!is_exist)
+                            {
+                                photo_url_to_delete = conn.ExecuteScalar("SELECT  [img_url]  FROM [dbo].[ecom_ad] where [ad_id]='" + ad_id + "'");
+                            }
+
+                            query = @"UPDATE [dbo].[ecom_ad]
+   SET [brand_id] = '" + brand_id + @"'
+      ,[txn_id] = '" + txn_id + @"'
+      ,[is_animation] = '" + is_animation + @"'
+      ,[img_url] = '" + img_url + @"'
+      ,[date_from] = '" + date_from + @"'
+      ,[date_to] = '" + date_to + @"'
+      ,[is_paid] = '" + is_paid + @"'
+      ,[destination_type] = '" + destination_type + @"'
+      ,[destination_value] = '" + destination_value + @"'
+      ,[admin_approval_status] = '" + admin_approval_status + @"'
+      ,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[order_by] = '" + order_by + @"' 
+      ,[updated_by] = '" + staff_id + @"'
+      ,[updated_on] = getutcdate()
+      ,[is_active] = '" + is_active + @"'
+ WHERE  ad_id='" + ad_id + "'";
+                            if (!conn.ExecuteNonQuery(query))
+                                return result;
+                            clsecom.SchDeletePic(photo_url_to_delete);
+                            result.data = "";
+                            result.token_new = clsecomauth.GetNewToken(dev_id);
+                            result.status = "SUCCESS";
+                            break;
+                        }
+                    case "add_ad":
+                        {
+                            if (clsecom.IsEmpty(token))
+                            {
+                                clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
+                                return result;
+                            }
+                            string brand_id = clsecom.get_value(inData.brand_id);
+                            string txn_id = clsecom.get_value(inData.txn_id);
+                            if (clsecom.IsEmpty(txn_id))
+                                txn_id = "3";
+                            string is_animation = clsecom.get_value(inData.is_animation);
+                            string date_from = clsecom.convert_client_time_to_utc(time_offset, clsecom.get_value(inData.date_from));
+                            string date_to = clsecom.convert_client_time_to_utc(time_offset, clsecom.get_value(inData.date_to));
+                            DateTime date_from_dt = DateTime.UtcNow;
+                            DateTime date_to_dt = DateTime.UtcNow;
+                            if (!DateTime.TryParse(date_from, out date_from_dt))
+                            {
+                                result.status_msg = "Date format of From Date is not correct";
+                                return result;
+                            }
+                            if (!DateTime.TryParse(date_to, out date_to_dt))
+                            {
+                                result.status_msg = "Date format of To Date is not correct";
+                                return result;
+                            }
+                            if (date_from_dt > date_to_dt)
+                            {
+                                result.status_msg = "From date should be less than To Date";
+                                return result;
+                            }
+                            string is_paid = clsecom.get_value(inData.is_paid);
+                            if (clsecom.IsEmpty(is_paid))
+                                is_paid = "N";
+
+                            string destination_type = clsecom.get_value(inData.destination_type);
+                            string destination_value = clsecom.get_value(inData.destination_value);
+                            string order_by = clsecom.get_value(inData.order_by);
+                            string is_active = clsecom.get_value(inData.is_active);
+
+
+                            string img_url = clsecom.get_value(inData.img_url);
+                            string img_data = clsecom.get_value(inData.img_url);
+                            bool is_exist = false;
+                            if (clsecom.get_bool_from_yn(is_animation))
+                                img_url = clsecom.EcomSavePicAndGetFileName(img_data, true, out is_exist);
+                            else
+                                img_url = clsecom.EcomSavePicAndGetFileName(img_data, out is_exist);
+                            if (clsecom.IsEmpty(img_url))
+                            {
+                                result.status_msg = "Image failed to save";
+                                return result;
+                            }
+                            string admin_approval_status = "pending_approval";
+                            string admin_approval_remarks = "";
+
+                            query = @"INSERT INTO [dbo].[ecom_ad]
+           ([brand_id]
+    
+           ,[is_animation]
+           ,[img_url]
+           ,[date_from]
+           ,[date_to]
+           ,[is_paid]
+           ,[destination_type]
+           ,[destination_value]
+           ,[admin_approval_status]
+           ,[admin_approval_remarks]
+           ,[order_by]
+           ,[created_by]
+           ,[created_on] 
+           ,[is_active])
+     VALUES
+           ('" + brand_id + @"'
+      
+           ,'" + is_animation + @"' 
+           ,'" + img_url + @"'   
+           ,'" + date_from + @"'  
+           ,'" + date_to + @"'   
+           ,'" + is_paid + @"' 
+           ,'" + destination_type + @"' 
+           ,'" + destination_value + @"' 
+           ,'" + admin_approval_status + @"' 
+           ,'" + admin_approval_remarks + @"' 
+           ,'" + order_by + @"' 
+           ,'" + staff_id + @"' 
+           ,getutcdate() 
+          ,'" + is_active + @"')  SELECT SCOPE_IDENTITY()";
+                            string ad_id = conn.ExecuteScalar(query);
+                            if (clsecom.IsEmpty(ad_id))
+                                return result;
+                            string pn_title = "New Request for Ad";
+                            string brand_name = conn.ExecuteScalar("SELECT  [name_brand_en]  FROM  [dbo].[ecom_brand] where brand_id='" + brand_id + "'");
+                            string pn_msg = "Brand " + brand_name + " is submited an Ad for Approval of Administrator";
+                            clsecom.sendPnToAllAdmins("register_new_ad", store_id, pn_title, pn_title, pn_msg, pn_msg, ad_id);
+
+                            result.data = "";
+                            result.token_new = clsecomauth.GetNewToken(dev_id);
+                            result.status = "SUCCESS";
+                            break;
+                        }
                     case "update_store":
                         {
                             if (clsecom.IsEmpty(token))
@@ -4310,207 +4522,207 @@ WHERE RowNum BETWEEN 1+(" + last_idx + @") AND (" + last_idx + @"+" + ecom_max_p
                             result.status = "SUCCESS";
                             break;
                         }
-                    case "login_staff":
-                        {
-                            if (clsecom.IsEmpty(token))
-                            {
-                                clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
-                                return result;
-                            }
-                            string email = clsecom.get_value(inData.email);
-                            if (clsecom.IsEmpty(email))
-                            {
-                                result.status_msg = "Email should not be empty";
-                                return result;
-                            }
-                            if (auth.IsContainsSpecialChars(email))
-                            {
-                                result.status_msg = "Email should not contain special characters";
-                                return result;
-                            }
-                            string is_email_verified = clsecom.get_value(inData.is_email_verified);
-                            DataTable dtExist = conn.getDataTable(@"SELECT [staff_id]
-      ,[brand_id]
-      ,[store_id]
-      ,[role_type]
-      ,[email]
-,[is_email_verified]
-      ,[name_en]
-      ,[name_ar]
-      ,[mobile_num]
-      ,[wa_num]
-      ,[address_en]
-      ,[address_ar]
-      ,[loc_lat]
-      ,[loc_lng]
-      ,[created_by]
-      ,[created_on]
-      ,[updated_by]
-      ,[updated_on]
-      ,[is_active]
-  FROM  [dbo].[ecom_staff] where email='" + email + @"' and [store_id]='" + store_id + @"'");
-                            if (dtExist.Rows.Count == 0)
-                            {
-                                result.status_msg = "Unauthorized";
-                                return result;
-                            }
-                            if (!clsecom.get_bool_from_yn(dtExist.Rows[0]["is_active"].ToString().ToLower()))
-                            {
-                                result.status_msg = "This user account is deactivated";
-                                return result;
-                            }
-                            if (!clsecom.IsEmpty(is_email_verified))
-                            {
-                                if (is_email_verified != dtExist.Rows[0]["is_email_verified"].ToString())
-                                {
-                                    conn.ExecuteNonQuery(@"UPDATE [dbo].[ecom_staff]
-   SET [is_email_verified]='" + is_email_verified + @"'
- WHERE staff_id='" + dtExist.Rows[0]["staff_id"].ToString() + "'");
-                                }
-                            }
-                            else
-                                is_email_verified = dtExist.Rows[0]["is_email_verified"].ToString();
-                            EcomUserData userData = new EcomUserData();
-                            userData.user_type = dtExist.Rows[0]["role_type"].ToString();
-                            userData.customer = new EcomCustomerData();
-                            userData.brand = new EcomBrandData();
-                            userData.staff = new EcomStaffData();
-                            userData.staff.staff_id = dtExist.Rows[0]["staff_id"].ToString();
-                            userData.staff.brand_id = dtExist.Rows[0]["brand_id"].ToString();
-                            userData.staff.store_id = dtExist.Rows[0]["store_id"].ToString();
-                            userData.staff.role_type = dtExist.Rows[0]["role_type"].ToString();
-                            userData.staff.email = dtExist.Rows[0]["email"].ToString();
-                            userData.staff.is_email_verified = is_email_verified;
-                            userData.staff.name_en = dtExist.Rows[0]["name_en"].ToString();
-                            userData.staff.name_ar = dtExist.Rows[0]["name_ar"].ToString();
-                            userData.staff.mobile_num = dtExist.Rows[0]["mobile_num"].ToString();
-                            userData.staff.wa_num = dtExist.Rows[0]["wa_num"].ToString();
-                            userData.staff.address_en = dtExist.Rows[0]["address_en"].ToString();
-                            userData.staff.address_ar = dtExist.Rows[0]["address_ar"].ToString();
-                            userData.staff.loc_lat = dtExist.Rows[0]["loc_lat"].ToString();
-                            userData.staff.loc_lng = dtExist.Rows[0]["loc_lng"].ToString();
-                            userData.staff.created_by = dtExist.Rows[0]["created_by"].ToString();
-                            userData.staff.created_on = dtExist.Rows[0]["created_on"].ToString();
-                            userData.staff.updated_by = dtExist.Rows[0]["updated_by"].ToString();
-                            userData.staff.updated_on = dtExist.Rows[0]["updated_on"].ToString();
-                            userData.staff.is_active = dtExist.Rows[0]["is_active"].ToString();
+//                    case "login_staff":
+//                        {
+//                            if (clsecom.IsEmpty(token))
+//                            {
+//                                clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
+//                                return result;
+//                            }
+//                            string email = clsecom.get_value(inData.email);
+//                            if (clsecom.IsEmpty(email))
+//                            {
+//                                result.status_msg = "Email should not be empty";
+//                                return result;
+//                            }
+//                            if (auth.IsContainsSpecialChars(email))
+//                            {
+//                                result.status_msg = "Email should not contain special characters";
+//                                return result;
+//                            }
+//                            string is_email_verified = clsecom.get_value(inData.is_email_verified);
+//                            DataTable dtExist = conn.getDataTable(@"SELECT [staff_id]
+//      ,[brand_id]
+//      ,[store_id]
+//      ,[role_type]
+//      ,[email]
+//,[is_email_verified]
+//      ,[name_en]
+//      ,[name_ar]
+//      ,[mobile_num]
+//      ,[wa_num]
+//      ,[address_en]
+//      ,[address_ar]
+//      ,[loc_lat]
+//      ,[loc_lng]
+//      ,[created_by]
+//      ,[created_on]
+//      ,[updated_by]
+//      ,[updated_on]
+//      ,[is_active]
+//  FROM  [dbo].[ecom_staff] where email='" + email + @"' and [store_id]='" + store_id + @"'");
+//                            if (dtExist.Rows.Count == 0)
+//                            {
+//                                result.status_msg = "Unauthorized";
+//                                return result;
+//                            }
+//                            if (!clsecom.get_bool_from_yn(dtExist.Rows[0]["is_active"].ToString().ToLower()))
+//                            {
+//                                result.status_msg = "This user account is deactivated";
+//                                return result;
+//                            }
+//                            if (!clsecom.IsEmpty(is_email_verified))
+//                            {
+//                                if (is_email_verified != dtExist.Rows[0]["is_email_verified"].ToString())
+//                                {
+//                                    conn.ExecuteNonQuery(@"UPDATE [dbo].[ecom_staff]
+//   SET [is_email_verified]='" + is_email_verified + @"'
+// WHERE staff_id='" + dtExist.Rows[0]["staff_id"].ToString() + "'");
+//                                }
+//                            }
+//                            else
+//                                is_email_verified = dtExist.Rows[0]["is_email_verified"].ToString();
+//                            EcomUserData userData = new EcomUserData();
+//                            userData.user_type = dtExist.Rows[0]["role_type"].ToString();
+//                            userData.customer = new EcomCustomerData();
+//                            userData.brand = new EcomBrandData();
+//                            userData.staff = new EcomStaffData();
+//                            userData.staff.staff_id = dtExist.Rows[0]["staff_id"].ToString();
+//                            userData.staff.brand_id = dtExist.Rows[0]["brand_id"].ToString();
+//                            userData.staff.store_id = dtExist.Rows[0]["store_id"].ToString();
+//                            userData.staff.role_type = dtExist.Rows[0]["role_type"].ToString();
+//                            userData.staff.email = dtExist.Rows[0]["email"].ToString();
+//                            userData.staff.is_email_verified = is_email_verified;
+//                            userData.staff.name_en = dtExist.Rows[0]["name_en"].ToString();
+//                            userData.staff.name_ar = dtExist.Rows[0]["name_ar"].ToString();
+//                            userData.staff.mobile_num = dtExist.Rows[0]["mobile_num"].ToString();
+//                            userData.staff.wa_num = dtExist.Rows[0]["wa_num"].ToString();
+//                            userData.staff.address_en = dtExist.Rows[0]["address_en"].ToString();
+//                            userData.staff.address_ar = dtExist.Rows[0]["address_ar"].ToString();
+//                            userData.staff.loc_lat = dtExist.Rows[0]["loc_lat"].ToString();
+//                            userData.staff.loc_lng = dtExist.Rows[0]["loc_lng"].ToString();
+//                            userData.staff.created_by = dtExist.Rows[0]["created_by"].ToString();
+//                            userData.staff.created_on = dtExist.Rows[0]["created_on"].ToString();
+//                            userData.staff.updated_by = dtExist.Rows[0]["updated_by"].ToString();
+//                            userData.staff.updated_on = dtExist.Rows[0]["updated_on"].ToString();
+//                            userData.staff.is_active = dtExist.Rows[0]["is_active"].ToString();
 
-                            if (dtExist.Rows[0]["role_type"].ToString().ToLower() == "admin")
-                            {
-                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
-                                result.status_msg = "";
-                                result.token_new = clsecomauth.GetNewToken(dev_id);
-                                result.status = "SUCCESS";
-                                return result;
-                            }
-                            string brand_id = dtExist.Rows[0]["brand_id"].ToString();
-                            string brand_email = dtExist.Rows[0]["email"].ToString();
-                            dtExist = conn.getDataTable(@"SELECT  [brand_id]
-      ,[store_id]
-      ,[email]
-      ,[name_owner_en]
-      ,[name_owner_ar]
-      ,[name_brand_en]
-      ,[name_brand_ar]
-      ,[brand_desc_en]
-      ,[brand_desc_ar]
-      ,[business_sector_id]
-      ,[phone]
-      ,[mobile_whatsapp]
-      ,[reg_message_to_admin]
-      ,[icon_url]
-      ,[loc_lat]
-      ,[loc_lng]
-      ,[admin_approval_status]
-      ,[admin_approval_remarks]
-      ,[need_approval_to_add_prod]
-      ,[order_by]
-      ,[allow_delivery_within_km]
-      ,[created_by]
-      ,[created_on]
-      ,[updated_by]
-      ,[updated_on]
-      ,[is_active]
-  FROM  [dbo].[ecom_brand] where [email]='" + email + "' and brand_id='" + brand_id + "' and store_id='" + store_id + "'");
-                            if (dtExist.Rows.Count == 0)
-                            {
-                                result.status_msg = "Unauthorized";
-                                return result;
-                            }
+//                            if (dtExist.Rows[0]["role_type"].ToString().ToLower() == "admin")
+//                            {
+//                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+//                                result.status_msg = "";
+//                                result.token_new = clsecomauth.GetNewToken(dev_id);
+//                                result.status = "SUCCESS";
+//                                return result;
+//                            }
+//                            string brand_id = dtExist.Rows[0]["brand_id"].ToString();
+//                            string brand_email = dtExist.Rows[0]["email"].ToString();
+//                            dtExist = conn.getDataTable(@"SELECT  [brand_id]
+//      ,[store_id]
+//      ,[email]
+//      ,[name_owner_en]
+//      ,[name_owner_ar]
+//      ,[name_brand_en]
+//      ,[name_brand_ar]
+//      ,[brand_desc_en]
+//      ,[brand_desc_ar]
+//      ,[business_sector_id]
+//      ,[phone]
+//      ,[mobile_whatsapp]
+//      ,[reg_message_to_admin]
+//      ,[icon_url]
+//      ,[loc_lat]
+//      ,[loc_lng]
+//      ,[admin_approval_status]
+//      ,[admin_approval_remarks]
+//      ,[need_approval_to_add_prod]
+//      ,[order_by]
+//      ,[allow_delivery_within_km]
+//      ,[created_by]
+//      ,[created_on]
+//      ,[updated_by]
+//      ,[updated_on]
+//      ,[is_active]
+//  FROM  [dbo].[ecom_brand] where [email]='" + email + "' and brand_id='" + brand_id + "' and store_id='" + store_id + "'");
+//                            if (dtExist.Rows.Count == 0)
+//                            {
+//                                result.status_msg = "Unauthorized";
+//                                return result;
+//                            }
 
-                            if (!clsecom.get_bool_from_yn(dtExist.Rows[0]["is_active"].ToString().ToLower()))
-                            {
-                                result.status_msg = "Your business account is deactivated. Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
-                                return result;
-                            }
+//                            if (!clsecom.get_bool_from_yn(dtExist.Rows[0]["is_active"].ToString().ToLower()))
+//                            {
+//                                result.status_msg = "Your business account is deactivated. Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
+//                                return result;
+//                            }
 
-                            userData.brand = new EcomBrandData();
-                            userData.brand.brand_id = dtExist.Rows[0]["brand_id"].ToString();
-                            userData.brand.store_id = dtExist.Rows[0]["store_id"].ToString();
-                            userData.brand.email = dtExist.Rows[0]["email"].ToString();
-                            userData.brand.name_owner_en = dtExist.Rows[0]["name_owner_en"].ToString();
-                            userData.brand.name_owner_ar = dtExist.Rows[0]["name_owner_ar"].ToString();
-                            userData.brand.name_brand_en = dtExist.Rows[0]["name_brand_en"].ToString();
-                            userData.brand.name_brand_ar = dtExist.Rows[0]["name_brand_ar"].ToString();
-                            userData.brand.brand_desc_en = dtExist.Rows[0]["brand_desc_en"].ToString();
-                            userData.brand.brand_desc_ar = dtExist.Rows[0]["brand_desc_ar"].ToString();
-                            userData.brand.business_sector_id = dtExist.Rows[0]["business_sector_id"].ToString();
-                            userData.brand.phone = dtExist.Rows[0]["phone"].ToString();
-                            userData.brand.mobile_whatsapp = dtExist.Rows[0]["mobile_whatsapp"].ToString();
-                            userData.brand.reg_message_to_admin = dtExist.Rows[0]["reg_message_to_admin"].ToString();
-                            userData.brand.icon_url = dtExist.Rows[0]["icon_url"].ToString();
-                            userData.brand.loc_lat = dtExist.Rows[0]["loc_lat"].ToString();
-                            userData.brand.loc_lng = dtExist.Rows[0]["loc_lng"].ToString();
-                            userData.brand.admin_approval_status = dtExist.Rows[0]["admin_approval_status"].ToString();
-                            userData.brand.admin_approval_remarks = dtExist.Rows[0]["admin_approval_remarks"].ToString();
-                            userData.brand.need_approval_to_add_prod = dtExist.Rows[0]["need_approval_to_add_prod"].ToString();
-                            userData.brand.order_by = dtExist.Rows[0]["order_by"].ToString();
-                            userData.brand.allow_delivery_within_km = dtExist.Rows[0]["allow_delivery_within_km"].ToString();
-                            userData.brand.created_by = dtExist.Rows[0]["created_by"].ToString();
-                            userData.brand.created_on = dtExist.Rows[0]["created_on"].ToString();
-                            userData.brand.updated_by = dtExist.Rows[0]["updated_by"].ToString();
-                            userData.brand.updated_on = dtExist.Rows[0]["updated_on"].ToString();
-                            userData.brand.is_active = dtExist.Rows[0]["is_active"].ToString();
+//                            userData.brand = new EcomBrandData();
+//                            userData.brand.brand_id = dtExist.Rows[0]["brand_id"].ToString();
+//                            userData.brand.store_id = dtExist.Rows[0]["store_id"].ToString();
+//                            userData.brand.email = dtExist.Rows[0]["email"].ToString();
+//                            userData.brand.name_owner_en = dtExist.Rows[0]["name_owner_en"].ToString();
+//                            userData.brand.name_owner_ar = dtExist.Rows[0]["name_owner_ar"].ToString();
+//                            userData.brand.name_brand_en = dtExist.Rows[0]["name_brand_en"].ToString();
+//                            userData.brand.name_brand_ar = dtExist.Rows[0]["name_brand_ar"].ToString();
+//                            userData.brand.brand_desc_en = dtExist.Rows[0]["brand_desc_en"].ToString();
+//                            userData.brand.brand_desc_ar = dtExist.Rows[0]["brand_desc_ar"].ToString();
+//                            userData.brand.business_sector_id = dtExist.Rows[0]["business_sector_id"].ToString();
+//                            userData.brand.phone = dtExist.Rows[0]["phone"].ToString();
+//                            userData.brand.mobile_whatsapp = dtExist.Rows[0]["mobile_whatsapp"].ToString();
+//                            userData.brand.reg_message_to_admin = dtExist.Rows[0]["reg_message_to_admin"].ToString();
+//                            userData.brand.icon_url = dtExist.Rows[0]["icon_url"].ToString();
+//                            userData.brand.loc_lat = dtExist.Rows[0]["loc_lat"].ToString();
+//                            userData.brand.loc_lng = dtExist.Rows[0]["loc_lng"].ToString();
+//                            userData.brand.admin_approval_status = dtExist.Rows[0]["admin_approval_status"].ToString();
+//                            userData.brand.admin_approval_remarks = dtExist.Rows[0]["admin_approval_remarks"].ToString();
+//                            userData.brand.need_approval_to_add_prod = dtExist.Rows[0]["need_approval_to_add_prod"].ToString();
+//                            userData.brand.order_by = dtExist.Rows[0]["order_by"].ToString();
+//                            userData.brand.allow_delivery_within_km = dtExist.Rows[0]["allow_delivery_within_km"].ToString();
+//                            userData.brand.created_by = dtExist.Rows[0]["created_by"].ToString();
+//                            userData.brand.created_on = dtExist.Rows[0]["created_on"].ToString();
+//                            userData.brand.updated_by = dtExist.Rows[0]["updated_by"].ToString();
+//                            userData.brand.updated_on = dtExist.Rows[0]["updated_on"].ToString();
+//                            userData.brand.is_active = dtExist.Rows[0]["is_active"].ToString();
 
 
-                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "rejected")
-                            {
-                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(dtExist.Rows[0]["admin_approval_status"].ToString().ToLower()) + ". Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + " for further steps)";
-                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
-                                result.status = "SUCCESS";
-                                return result;
-                            }
-                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "pending_approval" ||
-                                dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "on_hold")
-                            {
-                                string stat = dtExist.Rows[0]["admin_approval_status"].ToString().ToLower().Replace("_", " ");
-                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(stat) + ". Please wait for 48 business hours. You will get email notification after completing the Approval Process. If more delayed please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
-                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
-                                result.status = "SUCCESS";
-                                return result;
-                            }
+//                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "rejected")
+//                            {
+//                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(dtExist.Rows[0]["admin_approval_status"].ToString().ToLower()) + ". Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + " for further steps)";
+//                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+//                                result.status = "SUCCESS";
+//                                return result;
+//                            }
+//                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "pending_approval" ||
+//                                dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "on_hold")
+//                            {
+//                                string stat = dtExist.Rows[0]["admin_approval_status"].ToString().ToLower().Replace("_", " ");
+//                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(stat) + ". Please wait for 48 business hours. You will get email notification after completing the Approval Process. If more delayed please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
+//                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+//                                result.status = "SUCCESS";
+//                                return result;
+//                            }
 
-                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "draft")
-                            {
-                                result.status_msg = "Please submit Business Account Form for approval. Please use Business Profile form in the App";
-                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
-                                result.status = "SUCCESS";
-                                return result;
-                            }
-                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() != "approved")
-                            {
-                                string stat = dtExist.Rows[0]["admin_approval_status"].ToString().ToLower().Replace("_", " ");
-                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(stat) + ". Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
-                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
-                                result.status = "SUCCESS";
-                                return result;
-                            }
-                            result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
-                            result.status_msg = "";
-                            result.token_new = clsecomauth.GetNewToken(dev_id);
-                            result.status = "SUCCESS";
-                            break;
-                        }
+//                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "draft")
+//                            {
+//                                result.status_msg = "Please submit Business Account Form for approval. Please use Business Profile form in the App";
+//                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+//                                result.status = "SUCCESS";
+//                                return result;
+//                            }
+//                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() != "approved")
+//                            {
+//                                string stat = dtExist.Rows[0]["admin_approval_status"].ToString().ToLower().Replace("_", " ");
+//                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(stat) + ". Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
+//                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+//                                result.status = "SUCCESS";
+//                                return result;
+//                            }
+//                            result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+//                            result.status_msg = "";
+//                            result.token_new = clsecomauth.GetNewToken(dev_id);
+//                            result.status = "SUCCESS";
+//                            break;
+//                        }
                     case "register_brand":
                         {
                             if (clsecom.IsEmpty(token))
@@ -4622,6 +4834,230 @@ WHERE RowNum BETWEEN 1+(" + last_idx + @") AND (" + last_idx + @"+" + ecom_max_p
                             result.status = "SUCCESS";
                             break;
                         }
+                    case "login_staff":
+                        {
+                            if (clsecom.IsEmpty(token))
+                            {
+                                clsecom.Log(log_key, "Received without token.(Input:" + clsecom.getJsonObjectToString(input) + ")", true, null, true);
+                                return result;
+                            }
+                            string email = clsecom.get_value(inData.email);
+                            if (clsecom.IsEmpty(email))
+                            {
+                                result.status_msg = "Email should not be empty";
+                                return result;
+                            }
+                            if (auth.IsContainsSpecialChars(email))
+                            {
+                                result.status_msg = "Email should not contain special characters";
+                                return result;
+                            }
+                            string is_email_verified = clsecom.get_value(inData.is_email_verified);
+                            DataTable dtExist = conn.getDataTable(@"SELECT [staff_id]
+      ,[brand_id]
+      ,[store_id]
+      ,[role_type]
+      ,[email]
+,[is_email_verified]
+      ,[f_name]
+      ,[l_name]
+      ,[mobile_num]
+      ,[wa_num]
+      ,[address_en]
+      ,[address_ar]
+      ,[loc_lat]
+      ,[loc_lng]
+      ,[created_by]
+      ,[created_on]
+      ,[updated_by]
+      ,[updated_on]
+      ,[is_active]
+,[is_firebase_account_created]
+,[firebase_initial_pw]
+  FROM  [dbo].[ecom_staff] where email='" + email + @"' and [store_id]='" + store_id + @"'");
+                            if (dtExist.Rows.Count == 0)
+                            {
+                                result.status_msg = "Unauthorized";
+                                return result;
+                            }
+                            if (!clsecom.get_bool_from_yn(dtExist.Rows[0]["is_active"].ToString().ToLower()))
+                            {
+                                result.status_msg = "This user account is deactivated";
+                                return result;
+                            }
+                            if (!clsecom.IsEmpty(is_email_verified))
+                            {
+                                if (is_email_verified != dtExist.Rows[0]["is_email_verified"].ToString())
+                                {
+                                    conn.ExecuteNonQuery(@"UPDATE [dbo].[ecom_staff]
+   SET [is_email_verified]='" + is_email_verified + @"'
+ WHERE staff_id='" + dtExist.Rows[0]["staff_id"].ToString() + "'");
+                                }
+                            }
+                            else
+                                is_email_verified = dtExist.Rows[0]["is_email_verified"].ToString();
+                            EcomUserData userData = new EcomUserData();
+                            userData.user_type = dtExist.Rows[0]["role_type"].ToString();
+                            userData.customer = new EcomCustomerData();
+                            userData.brand = new EcomBrandData();
+                            userData.staff = new EcomStaffData();
+                            userData.staff.staff_id = dtExist.Rows[0]["staff_id"].ToString();
+                            userData.staff.brand_id = dtExist.Rows[0]["brand_id"].ToString();
+                            userData.staff.store_id = dtExist.Rows[0]["store_id"].ToString();
+                            userData.staff.role_type = dtExist.Rows[0]["role_type"].ToString();
+                            userData.staff.email = dtExist.Rows[0]["email"].ToString();
+                            userData.staff.is_email_verified = is_email_verified;
+                            userData.staff.f_name = dtExist.Rows[0]["f_name"].ToString();
+                            userData.staff.l_name = dtExist.Rows[0]["l_name"].ToString();
+                            userData.staff.mobile_num = dtExist.Rows[0]["mobile_num"].ToString();
+                            userData.staff.wa_num = dtExist.Rows[0]["wa_num"].ToString();
+                            userData.staff.address_en = dtExist.Rows[0]["address_en"].ToString();
+                            userData.staff.address_ar = dtExist.Rows[0]["address_ar"].ToString();
+                            userData.staff.loc_lat = dtExist.Rows[0]["loc_lat"].ToString();
+                            userData.staff.loc_lng = dtExist.Rows[0]["loc_lng"].ToString();
+                            userData.staff.created_by = dtExist.Rows[0]["created_by"].ToString();
+                            userData.staff.created_on = dtExist.Rows[0]["created_on"].ToString();
+                            userData.staff.updated_by = dtExist.Rows[0]["updated_by"].ToString();
+                            userData.staff.updated_on = dtExist.Rows[0]["updated_on"].ToString();
+                            userData.staff.is_active = dtExist.Rows[0]["is_active"].ToString();
+
+                            userData.staff.is_firebase_account_created = dtExist.Rows[0]["is_firebase_account_created"].ToString();
+                            userData.staff.firebase_initial_pw = dtExist.Rows[0]["firebase_initial_pw"].ToString();
+
+                            if (dtExist.Rows[0]["role_type"].ToString().ToLower() == "admin")
+                            {
+                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+                                result.status_msg = "";
+                                result.token_new = clsecomauth.GetNewToken(dev_id);
+                                result.status = "SUCCESS";
+                                return result;
+                            }
+                            string brand_id = dtExist.Rows[0]["brand_id"].ToString();
+                            string brand_email = dtExist.Rows[0]["email"].ToString();
+                            dtExist = conn.getDataTable(@"SELECT  [brand_id]
+      ,[store_id]
+      ,[email] 
+ ,[f_name_owner]
+      ,[l_name_owner]
+      ,[business_address_line_1]
+      ,[business_address_line_2]
+      ,[business_address_city]
+      ,[business_address_po_box_no]
+      ,[business_address_postcode]
+      ,[business_address_country]
+      ,[name_brand_en]
+      ,[name_brand_ar]
+      ,[brand_desc_en]
+      ,[brand_desc_ar]
+      ,[business_sector_id]
+      ,[phone]
+      ,[mobile_whatsapp]
+      ,[reg_message_to_admin]
+      ,[icon_url]
+      ,[loc_lat]
+      ,[loc_lng]
+      ,[admin_approval_status]
+      ,[admin_approval_remarks]
+      ,[need_approval_to_add_prod]
+      ,[order_by]
+      ,[allow_delivery_within_km]
+      ,[created_by]
+      ,[created_on]
+      ,[updated_by]
+      ,[updated_on]
+      ,[is_active]
+ ,[website]
+ ,[social_media_url]
+  FROM  [dbo].[ecom_brand] where [email]='" + email + "' and brand_id='" + brand_id + "' and store_id='" + store_id + "'");
+                            if (dtExist.Rows.Count == 0)
+                            {
+                                result.status_msg = "Unauthorized";
+                                return result;
+                            }
+
+                            if (!clsecom.get_bool_from_yn(dtExist.Rows[0]["is_active"].ToString().ToLower()))
+                            {
+                                result.status_msg = "Your business account is deactivated. Please contact administrator(" + clsecom.GetConfig("ecom_email_support") + ")";
+                                return result;
+                            }
+
+                            userData.brand = new EcomBrandData();
+                            userData.brand.brand_id = dtExist.Rows[0]["brand_id"].ToString();
+                            userData.brand.store_id = dtExist.Rows[0]["store_id"].ToString();
+                            userData.brand.email = dtExist.Rows[0]["email"].ToString();
+
+                            userData.brand.f_name_owner = dtExist.Rows[0]["f_name_owner"].ToString();
+                            userData.brand.l_name_owner = dtExist.Rows[0]["l_name_owner"].ToString();
+                            userData.brand.business_address_line_1 = dtExist.Rows[0]["business_address_line_1"].ToString();
+                            userData.brand.business_address_line_2 = dtExist.Rows[0]["business_address_line_2"].ToString();
+                            userData.brand.business_address_city = dtExist.Rows[0]["business_address_city"].ToString();
+                            userData.brand.business_address_po_box_no = dtExist.Rows[0]["business_address_po_box_no"].ToString();
+                            userData.brand.business_address_postcode = dtExist.Rows[0]["business_address_postcode"].ToString();
+                            userData.brand.business_address_country = dtExist.Rows[0]["business_address_country"].ToString();
+
+                            userData.brand.name_brand_en = dtExist.Rows[0]["name_brand_en"].ToString();
+                            userData.brand.name_brand_ar = dtExist.Rows[0]["name_brand_ar"].ToString();
+                            userData.brand.brand_desc_en = dtExist.Rows[0]["brand_desc_en"].ToString();
+                            userData.brand.brand_desc_ar = dtExist.Rows[0]["brand_desc_ar"].ToString();
+                            userData.brand.business_sector_id = dtExist.Rows[0]["business_sector_id"].ToString();
+                            userData.brand.phone = dtExist.Rows[0]["phone"].ToString();
+                            userData.brand.mobile_whatsapp = dtExist.Rows[0]["mobile_whatsapp"].ToString();
+                            userData.brand.reg_message_to_admin = dtExist.Rows[0]["reg_message_to_admin"].ToString();
+                            userData.brand.icon_url = dtExist.Rows[0]["icon_url"].ToString();
+                            userData.brand.loc_lat = dtExist.Rows[0]["loc_lat"].ToString();
+                            userData.brand.loc_lng = dtExist.Rows[0]["loc_lng"].ToString();
+                            userData.brand.admin_approval_status = dtExist.Rows[0]["admin_approval_status"].ToString();
+                            userData.brand.admin_approval_remarks = dtExist.Rows[0]["admin_approval_remarks"].ToString();
+                            userData.brand.need_approval_to_add_prod = dtExist.Rows[0]["need_approval_to_add_prod"].ToString();
+                            userData.brand.order_by = dtExist.Rows[0]["order_by"].ToString();
+                            userData.brand.allow_delivery_within_km = dtExist.Rows[0]["allow_delivery_within_km"].ToString();
+                            userData.brand.created_by = dtExist.Rows[0]["created_by"].ToString();
+                            userData.brand.created_on = dtExist.Rows[0]["created_on"].ToString();
+                            userData.brand.updated_by = dtExist.Rows[0]["updated_by"].ToString();
+                            userData.brand.updated_on = dtExist.Rows[0]["updated_on"].ToString();
+                            userData.brand.is_active = dtExist.Rows[0]["is_active"].ToString();
+                            userData.brand.website = dtExist.Rows[0]["website"].ToString();
+                            userData.brand.social_media_url = dtExist.Rows[0]["social_media_url"].ToString();
+
+                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "rejected")
+                            {
+                                //result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(dtExist.Rows[0]["admin_approval_status"].ToString().ToLower()) + ". Please contact administrator (" + clsecom.GetConfig("ecom_email_support").Trim() + " for further steps)";
+                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(dtExist.Rows[0]["admin_approval_status"].ToString().ToLower()) + ". You can submit Business Account Form again for approval. Please use Business Profile form in the App";
+                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+                                result.status = "SUCCESS";
+                                return result;
+                            }
+                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "pending_approval" ||
+                                dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "on_hold")
+                            {
+                                string stat = dtExist.Rows[0]["admin_approval_status"].ToString().ToLower().Replace("_", " ");
+                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(stat) + ". Please wait for 48 business hours. You will get email notification after completing the Approval Process. If more delayed please contact administrator (" + clsecom.GetConfig("ecom_email_support").Trim() + ")";
+                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+                                result.status = "SUCCESS";
+                                return result;
+                            }
+
+                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() == "draft")
+                            {
+                                result.status_msg = "Please submit Business Account Form for approval. Please use Business Profile form in the App";
+                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+                                result.status = "SUCCESS";
+                                return result;
+                            }
+                            if (dtExist.Rows[0]["admin_approval_status"].ToString().ToLower() != "approved")
+                            {
+                                string stat = dtExist.Rows[0]["admin_approval_status"].ToString().ToLower().Replace("_", " ");
+                                result.status_msg = "Your account Approval Status is:" + clsecom.ToTitleCase(stat) + ". Please contact administrator (" + clsecom.GetConfig("ecom_email_support").Trim() + ")";
+                                result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+                                result.status = "SUCCESS";
+                                return result;
+                            }
+                            result.data = Newtonsoft.Json.JsonConvert.SerializeObject(userData);
+                            result.status_msg = "";
+                            result.token_new = clsecomauth.GetNewToken(dev_id);
+                            result.status = "SUCCESS";
+                            break;
+                        }
                     case "get_user_type_for_exists":
                         {
                             if (clsecom.IsEmpty(token))
@@ -4682,5 +5118,6 @@ store_id='" + store_id + @"' and [email]='" + email + @"'";
             }
             return result;
         }
+
     }
 }

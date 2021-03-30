@@ -50,6 +50,52 @@ where isnull(o.is_active,'')='Y' and
             res.total_pending = conn.ExecuteScalar(query);
             return res;
         }
+
+        public string convert_client_time_to_utc(string client_time_zone_offset, string client_time)
+        {
+            int client_time_zone_offset_int = 0;
+            DateTime client_time_dt = DateTime.UtcNow;
+            if (int.TryParse(client_time_zone_offset, out client_time_zone_offset_int))
+            {
+                if (DateTime.TryParse(client_time, out client_time_dt))
+                {
+                    client_time_dt = client_time_dt.AddMinutes(client_time_zone_offset_int);
+                    return client_time_dt.ToString("dd-MMM-yyyy HH:mm:ss");
+                }
+                else
+                {
+                    //date conversion wrong
+                }
+            }
+            else
+            {
+                //offset wrong
+            }
+            return client_time;
+        }
+        public string convert_utc_to_client_time(string client_time_zone_offset, string utc_time)
+        {
+            int client_time_zone_offset_int = 0;
+            DateTime utc_time_dt = DateTime.UtcNow;
+            if (int.TryParse(client_time_zone_offset, out client_time_zone_offset_int))
+            {
+                if (DateTime.TryParse(utc_time, out utc_time_dt))
+                {
+                    utc_time_dt = utc_time_dt.AddMinutes(-client_time_zone_offset_int);
+                    return utc_time_dt.ToString("dd-MMM-yyyy HH:mm:ss");
+                }
+                else
+                {
+                    //date conversion wrong
+                }
+            }
+            else
+            {
+                //offset wrong
+            }
+            return utc_time;
+        }
+
         public EcomSalesItem get_sales(string day_key, string date_from, string date_to, string store_id, out string res_msg)
         {
             res_msg = "";
@@ -416,6 +462,61 @@ BETWEEN 1+(" + last_idx + @") AND (" + last_idx + @"+" + max_in_a_call + @")";
                     file_name = GetUniqNo() + ".jpeg";
                     pic_url = get_asset_folder() + file_name;
                     img.Save(pic_url, ImageFormat.Jpeg);
+                }
+                kill_memmory_stream(ms);
+                kill_image(img);
+                return file_name;
+            }
+            catch (Exception exp)
+            {
+                Log(log_key, exp.Message + "(pic_url=" + pic_url + ",base64data=" + base64data + ")", true, exp);
+            }
+            return "";
+        }
+        public string EcomSavePicAndGetFileName(string base64data, bool is_gif, out bool is_path)
+        {
+            string log_key = "EcomSavePicAndGetFileName";
+            string pic_url = "";
+            is_path = false;
+            string file_name = "";
+            try
+            {
+                if (base64data.Trim().Length == 0)
+                {
+                    return "";
+                }
+                string fname = get_file_name_if_path(base64data);
+                if (fname.Trim().Length > 0)
+                {
+                    is_path = true;
+                    return fname;
+                }
+                string base64data_without_tail = get_base64_without_tail(base64data);
+                byte[] bytes = null;
+                if (is_gif)
+                {
+                    HashSet<char> whiteSpace = new HashSet<char> { '\t', '\n', '\r', ' ' };
+                    int length = base64data_without_tail.Count(c => !whiteSpace.Contains(c));
+                    if (length % 4 != 0)
+                        base64data_without_tail += new string('=', 4 - length % 4); // Pad length to multiple of 4.
+                    bytes = Convert.FromBase64String(base64data_without_tail);
+                }
+                else
+                    bytes = Convert.FromBase64String(base64data_without_tail);
+                Image img = null;
+                MemoryStream ms = null;
+                using (ms = new MemoryStream(bytes))
+                {
+                    img = Image.FromStream(ms);
+                    if (is_gif)
+                        file_name = GetUniqNo() + ".gif";
+                    else
+                        file_name = GetUniqNo() + ".jpeg";
+                    pic_url = get_asset_folder() + file_name;
+                    if (is_gif)
+                        img.Save(pic_url, ImageFormat.Gif);
+                    else
+                        img.Save(pic_url, ImageFormat.Jpeg);
                 }
                 kill_memmory_stream(ms);
                 kill_image(img);
