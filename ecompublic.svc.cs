@@ -296,10 +296,10 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
                                 item.coupon_code = dtData.Rows[i]["coupon_code"].ToString().Trim();
                                 item.created_by = dtData.Rows[i]["created_by"].ToString().Trim();
 
-                                item.created_by_name = dtData.Rows[i]["created_by_name"].ToString().Trim();
+                               // item.created_by_name = dtData.Rows[i]["created_by_name"].ToString().Trim();
                                 item.created_on = dtData.Rows[i]["created_on"].ToString().Trim();
                                 item.updated_by = dtData.Rows[i]["updated_by"].ToString().Trim();
-                                item.updated_by_name = dtData.Rows[i]["updated_by_name"].ToString().Trim();
+                               // item.updated_by_name = dtData.Rows[i]["updated_by_name"].ToString().Trim();
                                 item.updated_on = dtData.Rows[i]["updated_on"].ToString().Trim();
                                 item.is_active = dtData.Rows[i]["is_active"].ToString().Trim();
 
@@ -4270,7 +4270,7 @@ WHERE RowNum BETWEEN 1+(" + last_idx + @") AND (" + last_idx + @"+" + ecom_max_p
                             {
                                 ecom_max_products_scroll_load = clsecom.GetConfig("ecom_max_products_scroll_load");
                                 if (clsecom.IsEmpty(ecom_max_products_scroll_load))
-                                    ecom_max_products_scroll_load = "10";
+                                    ecom_max_products_scroll_load = "20";
                             }
                             string last_idx = clsecom.get_value(inData.last_idx);
                             if (last_idx == "")
