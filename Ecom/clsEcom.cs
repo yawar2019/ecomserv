@@ -1428,6 +1428,409 @@ SELECT   [tag_id] as id
                 return true;
             return false; 
         }
+        public string get_email_content(string body)
+        {
+            string msg = "Hi," + Environment.NewLine;
+            msg += body + Environment.NewLine + Environment.NewLine;
+            msg += "Thanks" + Environment.NewLine;
+            msg += "Support Team" + Environment.NewLine;
+            msg += "Olaala" + Environment.NewLine;
+            msg += Environment.NewLine + "----------" + Environment.NewLine;
+            msg += "Note, this is an auto generated email from Olaala. Please do not reply.";
+            return msg;
+        }
+        public bool sendEmailToCustomer(string cust_id, string sub, string body, bool is_html)
+        {
+            try
+            {
+                return sendEmail("", "", cust_id, false, sub, body, is_html);
+            }
+            catch (Exception exp)
+            {
+                Log("sendEmailToCustomer", exp.Message, true, exp);
+            }
+            return false;
+        }
+        public bool sendEmailToAdmins(string sub, string body, bool is_html)
+        {
+            try
+            {
+                return sendEmail("", "", "", true, sub, body, is_html);
+            }
+            catch (Exception exp)
+            {
+                Log("sendEmailToAdmins", exp.Message, true, exp);
+            }
+            return false;
+        }
+        public bool sendEmail(string brand_id, string staff_id, string cust_id, bool is_to_admins, string sub, string body, bool is_html)
+        {
+            try
+            {
+                clsConnectionSQL conn = new clsConnectionSQL();
+                DataTable dtEmails = new DataTable();
+                if (is_to_admins)
+                    dtEmails = conn.getDataTable(@"SELECT distinct [email]  FROM  [dbo].[ecom_staff] where [role_type]='admin'");
+                else if (!IsEmpty(brand_id))
+                    dtEmails = conn.getDataTable(@"(SELECT distinct [email]  FROM  [dbo].[ecom_staff] where [brand_id]='" + brand_id + @"')
+union (SELECT distinct [email] FROM [dbo].[ecom_brand] where [brand_id] = '" + brand_id + @"')");
+                else if (!IsEmpty(staff_id))
+                    dtEmails = conn.getDataTable(@"SELECT distinct [email]  FROM  [dbo].[ecom_staff] where [staff_id]='" + staff_id + "'");
+                else if (!IsEmpty(cust_id))
+                    dtEmails = conn.getDataTable(@"SELECT distinct [email] FROM  [dbo].[ecom_customer] where [cust_id]='" + cust_id + "'");
+                List<string> tos = new List<string>();
+                for (int i = 0; i < dtEmails.Rows.Count; i++)
+                {
+                    if (tos.Contains(dtEmails.Rows[i]["email"].ToString().Trim()))
+                        continue;
+                    tos.Add(dtEmails.Rows[i]["email"].ToString().Trim());
+                }
+                return send_email_gen(tos, sub, body, is_html);
+            }
+            catch (Exception exp)
+            {
+                Log("sendEmail", exp.Message, true, exp);
+            }
+            return false;
+        }
+
+        public bool send_email_gen(List<string> tos, string sub, string mail_body, bool is_html)
+        {
+            try
+            {
+                string ecom_email_no_reply_smtp = GetConfig("ecom_email_no_reply_smtp");
+                string ecom_email_no_reply_smtp_port = GetConfig("ecom_email_no_reply_smtp_port");
+                string ecom_email_no_reply_from = GetConfig("ecom_email_no_reply_from");
+                string ecom_email_no_reply_from_pw = GetConfig("ecom_email_no_reply_from_pw");
+                string ecom_app_name = GetConfig("ecom_app_name");
+                AttachmentCollection atts = new MailMessage().Attachments;
+                clsCommon common = new clsCommon();
+                return common.send_email(is_html, tos, sub, mail_body, atts, ecom_email_no_reply_from, ecom_email_no_reply_from_pw, ecom_app_name, ecom_email_no_reply_smtp, Convert.ToInt32(ecom_email_no_reply_smtp_port));
+            }
+            catch (Exception exp)
+            {
+                //  Log("send_email", exp.Message + "(body:" + MailBody + ")", true, exp);
+            }
+            return false;
+        }
+
+        public string generate_password()
+        {
+            int length = 8;
+            int numberOfNonAlphanumericCharacters = 0;
+            string pw = System.Web.Security.Membership.GeneratePassword(length, numberOfNonAlphanumericCharacters);
+            pw = pw.Replace("'", "1");
+            return pw;
+        }
+
+        public string get_yn_from_bool(bool val)
+        {
+            if (val)
+                return "Y";
+            return "N";
+        }
+
+        //public bool sendPnToCustomer(string pn_type, string store_id, string cust_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_value)
+        //{
+        //    return sendPn(pn_type, store_id, false, false, false, false, "", "", cust_id, title_en, title_ar, msg_en, msg_ar, destination_value);
+        //}
+        public bool sendPnToStaff(string pn_type, string store_id, string staff_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_value)
+        {
+            return sendPn(pn_type, store_id, false, false, false, false, "", staff_id, "", title_en, title_ar, msg_en, msg_ar, destination_value);
+        }
+        //public bool sendPnToAllAdmins(string pn_type, string store_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_value)
+        //{
+        //    return sendPn(pn_type, store_id, false, false, true, false, "", "", "", title_en, title_ar, msg_en, msg_ar, destination_value);
+        //}
+        public bool sendPnToAllCustomers(string pn_type, string store_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_value)
+        {
+            return sendPn(pn_type, store_id, true, false, false, false, "", "", "", title_en, title_ar, msg_en, msg_ar, destination_value);
+        }
+        public bool sendPn(string pn_type, string store_id, bool is_to_all_cust, bool is_to_all_brands, bool is_to_all_admin, bool is_to_all_delivery_agents, string brand_id, string staff_id, string cust_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_value)
+        {
+            try
+            {
+                string destination_type = pn_type;
+                string query = @"INSERT INTO [dbo].[ecom_pn] 
+           ([is_to_all_cust]
+           ,[is_to_all_brands]
+           ,[is_to_all_admin]
+           ,[is_to_all_delivery_agents]
+           ,[staff_id]
+           ,[cust_id]
+           ,[title_en]
+           ,[title_ar]
+           ,[msg_en]
+           ,[msg_ar]
+           ,[msg_time]
+           ,[is_sent]
+           ,[sent_time]
+           ,[destination_type]
+           ,[destination_value] 
+           ,[created_on] 
+           ,[is_active]
+,[pn_type])
+     VALUES
+           ('" + get_yn_from_bool(is_to_all_cust) + @"' 
+           ,'" + get_yn_from_bool(is_to_all_brands) + @"'  
+           ,'" + get_yn_from_bool(is_to_all_admin) + @"'  
+           ,'" + get_yn_from_bool(is_to_all_delivery_agents) + @"'  
+           ,'" + staff_id + @"'
+           ,'" + cust_id + @"' 
+           ,'" + title_en + @"'  
+           ,N'" + title_ar + @"'  
+           ,'" + msg_en + @"' 
+           ,N'" + msg_ar + @"' 
+           ,getutcdate()
+           ,'Y'
+           ,getutcdate()
+           ,'" + destination_type + @"' 
+           ,'" + destination_value + @"'  
+           ,getutcdate() 
+           ,'Y'
+,'" + pn_type + @"')";
+                clsConnectionSQL conn = new clsConnectionSQL();
+                if (conn.ExecuteNonQuery(query))
+                {
+                    List<EcomRegIdItem> reg_ids = get_reg_ids(pn_type, store_id, is_to_all_cust, is_to_all_brands, is_to_all_admin, is_to_all_delivery_agents, brand_id, staff_id, cust_id);
+                    List<string> ids = new List<string>();
+                    for (int i = 0; i < reg_ids.Count; i++)
+                        ids.Add(reg_ids[i].reg_id);
+                    send_pn_firebase(ids, title_en, msg_en, destination_type, destination_value);
+                }
+            }
+            catch (Exception exp)
+            {
+                Log("sendPn", exp.Message, true, exp);
+            }
+            return false;
+        }
+        public List<EcomreqForApprovalItem> get_req_for_approval(string time_offset, string store_id, out string res_msg)
+        {
+            res_msg = @"";
+            List<EcomreqForApprovalItem> res = new List<EcomreqForApprovalItem>();
+            clsConnectionSQL conn = new clsConnectionSQL();
+            string query = @"((
+select 'ad' as 'type',
+'Request for Ad' as 'msg',
+ad_id as 'id',
+convert(char(20),created_on,113) as 'date',
+admin_approval_status,
+admin_approval_remarks,
+created_on
+from ecom_ad where 
+admin_approval_status='pending_approval' and
+isnull(is_active,'N')='Y')
+union
+(
+select 'brand' as 'type',
+'Request for Business' as 'msg',
+brand_id as 'id',
+convert(char(20),created_on,113) as 'date',
+admin_approval_status,
+admin_approval_remarks,
+created_on
+from ecom_brand where 
+admin_approval_status='pending_approval' and
+isnull(is_active,'N')='Y')
+
+union
+(
+select 'product' as 'type',
+'Request for Product' as 'msg',
+prod_id as 'id',
+convert(char(20),created_on,113) as 'date',
+admin_approval_status,
+admin_approval_remarks,
+created_on
+from ecom_product where 
+admin_approval_status='pending_approval' and
+isnull(is_active,'N')='Y')
+union
+(
+select 'order_cancel' as 'type',
+'Request for Cancel Order' as 'msg',
+order_cancel_id as 'id',
+convert(char(20),created_on,113) as 'date',
+admin_approval_status,
+admin_approval_remarks,
+created_on
+from ecom_order_cancel where 
+admin_approval_status='pending_approval' and
+isnull(is_active,'N')='Y')) order by created_on";
+            DataTable dtData = conn.getDataTable(query);
+            for (int i = 0; i < dtData.Rows.Count; i++)
+            {
+                EcomreqForApprovalItem item = new EcomreqForApprovalItem();
+                item.type = dtData.Rows[i]["type"].ToString().Trim();
+                item.msg = dtData.Rows[i]["msg"].ToString().Trim();
+                item.id = dtData.Rows[i]["id"].ToString().Trim();
+                item.date = convert_utc_to_client_time(time_offset, dtData.Rows[i]["date"].ToString().Trim());
+                item.admin_approval_status = dtData.Rows[i]["admin_approval_status"].ToString().Trim();
+                item.admin_approval_remarks = dtData.Rows[i]["admin_approval_remarks"].ToString().Trim();
+                res.Add(item);
+            }
+            return res;
+        }
+        public string remove_special_chars_for_sql(string val)
+        {
+            val = val.Replace("'", "");
+            val = val.Replace("--", "");
+            return val;
+        }
+        private List<EcomRegIdItem> get_reg_ids(string pn_type, string store_id, bool is_to_all_cust, bool is_to_all_brands, bool is_to_all_admin, bool is_to_all_delivery_agents, string brand_id, string staff_id, string cust_id)
+        {
+            List<EcomRegIdItem> res = new List<EcomRegIdItem>();
+            try
+            {
+                string query = "";
+                DataTable dtData = new DataTable();
+                clsConnectionSQL conn = new clsConnectionSQL();
+                List<string> ids = new List<string>();
+                if (is_to_all_cust)
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code] 
+  FROM  [dbo].[ecom_device] where 
+  (role_type='customer' or isnull(role_type,'')='') and 
+  isnull(is_active,'')='Y' and   isnull(reg_id,'')!=''";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+                if (is_to_all_brands)
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code]
+  FROM  [dbo].[ecom_device] where 
+  (role_type='business_owner' or role_type='delivery') and 
+  isnull(is_active,'')='Y' and   isnull(reg_id,'')!=''";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+
+                if (is_to_all_admin)
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code]
+  FROM  [dbo].[ecom_device] where 
+  role_type='admin' and 
+  isnull(is_active,'')='Y' and   isnull(reg_id,'')!=''";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+
+                if (is_to_all_delivery_agents)
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code]
+  FROM  [dbo].[ecom_device] where role_type='delivery' and 
+  isnull(is_active,'')='Y' and   isnull(reg_id,'')!=''";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+                if (!IsEmpty(brand_id))
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code]
+  FROM  [dbo].[ecom_device] where isnull(is_active,'')='Y' and   isnull(reg_id,'')!=''
+  and [staff_id] in (select [staff_id] from [dbo].[ecom_staff] where [brand_id]='" + brand_id + @"' and isnull(is_active,'')='Y')";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+
+                if (!IsEmpty(staff_id))
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code]
+  FROM  [dbo].[ecom_device] where isnull(is_active,'')='Y' and   isnull(reg_id,'') !='' and [staff_id]='" + staff_id + "'";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+
+                if (!IsEmpty(cust_id))
+                {
+                    query = @"SELECT distinct  [reg_id],[lang_code] 
+  FROM  [dbo].[ecom_device] where isnull(is_active,'')='Y' and   isnull(reg_id,'') !='' and [cust_id]='" + cust_id + "'";
+                    dtData = conn.getDataTable(query);
+                    for (int i = 0; i < dtData.Rows.Count; i++)
+                    {
+                        if (ids.Contains(dtData.Rows[i]["reg_id"].ToString().Trim()))
+                            continue;
+                        ids.Add(dtData.Rows[i]["reg_id"].ToString().Trim());
+                        EcomRegIdItem this_item = new EcomRegIdItem();
+                        this_item.reg_id = dtData.Rows[i]["reg_id"].ToString().Trim();
+                        this_item.lang_code = dtData.Rows[i]["lang_code"].ToString().Trim();
+                        res.Add(this_item);
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                Log("sendPn", exp.Message, true, exp);
+            }
+            return res;
+        }
+        public bool sendEmailToBrand(string brand_id, string sub, string body, bool is_html)
+        {
+            try
+            {
+                return sendEmail(brand_id, "", "", false, sub, body, is_html);
+            }
+            catch (Exception exp)
+            {
+                Log("sendEmailToBrand", exp.Message, true, exp);
+            }
+            return false;
+        }
+        
         public List<EcomProductData> getProductsDyna(dynamic inData, out string res_status)
         {
             string log_key = "getProducts";
@@ -3093,19 +3496,90 @@ where
         {
             return sendPn(store_id, false, false, false, false,"", "", cust_id, title_en, title_ar, msg_en, msg_ar, destination_type, destination_value);
         }
-        public bool sendPnToStaff(string store_id, string staff_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_type, string destination_value)
-        {
-            return sendPn(store_id, false, false, false, false,"",  staff_id,"",  title_en,  title_ar,  msg_en,  msg_ar,  destination_type,  destination_value);
-        }
+        //public bool sendPnToStaff(string store_id, string staff_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_type, string destination_value)
+        //{
+        //    return sendPn(store_id, false, false, false, false,"",  staff_id,"",  title_en,  title_ar,  msg_en,  msg_ar,  destination_type,  destination_value);
+        //}
         public bool sendPnToAllAdmins(string store_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_type, string destination_value)
         {
             return sendPn(store_id, false, false, false, true,"", "", "", title_en, title_ar, msg_en, msg_ar, destination_type, destination_value);
+        }
+        public List<List<string>> SplitList(List<string> locations, int nSize = 999)
+        {
+            var list = new List<List<string>>();
+            for (int i = 0; i < locations.Count; i += nSize)
+            {
+                list.Add(locations.GetRange(i, Math.Min(nSize, locations.Count - i)));
+            }
+            return list;
         }
         public bool sendPn(string store_id, bool is_to_all_cust, bool is_to_all_brands, bool is_to_all_admin, bool is_to_all_delivery_agents, string brand_id, string staff_id, string cust_id, string title_en, string title_ar, string msg_en, string msg_ar, string destination_type, string destination_value)
         {
             //vintest todo
             return true;
         }
+        public bool send_pn_firebase(List<string> reg_id_list, string title, string body, string key1_value, string key2_value)
+        {
+            try
+            {
+                if (IsEmpty(body))
+                    return false;
+                List<List<string>> reg_ids_blocks = SplitList(reg_id_list, 999);
+                for (int i = 0; i < reg_ids_blocks.Count; i++)
+                {
+                    string SERVER_API_KEY = GetConfig("firebase_api_key");
+                    var SENDER_ID = GetConfig("firebase_sender_id");
+                    WebRequest tRequest = WebRequest.Create("https://fcm.googleapis.com/fcm/send");
+                    tRequest.Method = "post";
+                    tRequest.Headers.Add(string.Format("Authorization: key={0}", SERVER_API_KEY));
+                    tRequest.Headers.Add(string.Format("Sender: id={0}", SENDER_ID));
+                    tRequest.ContentType = "application/json";
+                    var payload = new
+                    {
+                        registration_ids = reg_ids_blocks[i],
+                        priority = "high",
+                        content_available = true,
+                        notification = new
+                        {
+                            body = body,
+                            title = title,
+                            badge = 1
+                        },
+                        data = new
+                        {
+                            key1 = key1_value,
+                            key2 = key2_value
+                        }
+
+                    };
+
+                    string postbody = Newtonsoft.Json.JsonConvert.SerializeObject(payload).ToString();
+                    Byte[] byteArray = Encoding.UTF8.GetBytes(postbody);
+                    tRequest.ContentLength = byteArray.Length;
+                    using (Stream dataStream = tRequest.GetRequestStream())
+                    {
+                        dataStream.Write(byteArray, 0, byteArray.Length);
+                        using (WebResponse tResponse = tRequest.GetResponse())
+                        {
+                            using (Stream dataStreamResponse = tResponse.GetResponseStream())
+                            {
+                                if (dataStreamResponse != null) using (StreamReader tReader = new StreamReader(dataStreamResponse))
+                                    {
+                                        String sResponseFromServer = tReader.ReadToEnd();
+                                        return true;
+                                    }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                Log("send_pn_firebase", exp.Message + "(body:" + body + ")", true, exp);
+            }
+            return false;
+        }
+
         public bool send_pn_firebase(string reg_id, string title, string body, string key1_value, string key2_value)
         {
             try

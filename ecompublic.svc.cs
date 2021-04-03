@@ -4170,6 +4170,329 @@ where [cust_id]='" + cust_id + @"'";
                             result.status = "SUCCESS";
                             break;
                         }
+                    case "update_requests_for_approval":
+                        {
+                            string type = clsecom.get_value(inData.type);
+                            string id = clsecom.get_value(inData.id);
+                            string admin_approval_status = clsecom.get_value(inData.admin_approval_status);
+                            string admin_approval_remarks = clsecom.get_value(inData.admin_approval_remarks);
+                            string title = "";
+                            string msg = "";
+                            if (clsecom.IsEmpty(admin_approval_status))
+                                return result;
+                            res_msg = "";
+                            if (clsecom.IsContainsSpecial(admin_approval_remarks, "Remarks", out res_msg))
+                            {
+                                result.status_msg = res_msg;
+                                return result;
+                            }
+                            if (type == "ad")
+                            {
+                                query = @"UPDATE [dbo].[ecom_ad] 
+   SET [admin_approval_status] = '" + admin_approval_status + @"'
+,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[updated_by] ='" + staff_id + @"'
+,[updated_on] =getutcdate()
+ WHERE  ad_id='" + id + @"'";
+                                if (!conn.ExecuteNonQuery(query))
+                                {
+                                    result.status_msg = "Failed to process. Please try later(Error Code: 2001)";
+                                    return result;
+                                }
+                                title = "New Ad Status";
+                                msg = "Status of your Ad is changed to: " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                if (!clsecom.IsEmpty(admin_approval_remarks))
+                                    msg += "Remarks: " + admin_approval_remarks;
+                                DataTable dtBrnd = conn.getDataTable("SELECT  [brand_id],name_brand_en  FROM  [dbo].[ecom_ad] where ad_id='" + id + "'");
+                                string brand_id = dtBrnd.Rows[0]["brand_id"].ToString().Trim();
+                                clsecom.sendPnToBrand("status_change_ad", store_id, brand_id, title, title, msg, msg, id);
+
+                                title = "Ad Status Changed to: " + clsecom.getStatusFromKey(admin_approval_status);
+                                msg = "Status of your Ad submitted for approval of Administrator is changed to " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                if (!clsecom.IsEmpty(admin_approval_remarks))
+                                    msg += "Remarks by Administrator: " + admin_approval_remarks + ".";
+                                msg = clsecom.get_email_content(msg);
+                                clsecom.sendEmailToBrand(brand_id, title, msg, false);
+
+                                if (admin_approval_status.ToLower().Trim() == "approved")
+                                {
+                                    string name_brand_en = dtBrnd.Rows[0]["name_brand_en"].ToString().Trim();
+                                    title = "Ad Available";
+                                    msg = "One Ad of Brand " + name_brand_en + " is available now!";
+                                    clsecom.sendPnToAllCustomers("new_ad_available", store_id, title, title, msg, msg, id);
+                                }
+                            }
+                            else if (type == "brand")
+                            {
+                                DataTable dtBrand = conn.getDataTable(@"SELECT   [name_brand_en] ,[admin_approval_status],[admin_approval_remarks],email,f_name_owner,l_name_owner,icon_url  FROM  [dbo].[ecom_brand] where brand_id='" + id + "'");
+                                string prev_status = dtBrand.Rows[0]["admin_approval_status"].ToString().Trim().ToLower();
+                                bool is_firebase_account_created = clsecom.get_bool_from_yn(conn.ExecuteScalar("select isnull(is_firebase_account_created,'N') from [dbo].[ecom_staff] where [brand_id]='" + id + "'"));
+                                if (admin_approval_status.ToLower().Trim() == "rejected")
+                                {
+                                    if (!is_firebase_account_created)
+                                    {
+                                        string brand_name = dtBrand.Rows[0]["name_brand_en"].ToString().Trim();
+                                        title = "New Business Status";
+                                        msg = "Status of your Business(" + brand_name + ") is changed to: " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                        if (!clsecom.IsEmpty(admin_approval_remarks))
+                                            msg += "Remarks: " + admin_approval_remarks + ". ";
+                                        msg += "You can submit again using Sign Up form.";
+                                        clsecom.sendPnToBrand("status_change_business_acc", store_id, id, title, title, msg, msg, "");
+
+                                        title = "Business Status Changed to: " + clsecom.getStatusFromKey(admin_approval_status);
+                                        msg = "Status of your Business submitted for approval of Administrator is changed to " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                        if (!clsecom.IsEmpty(admin_approval_remarks))
+                                        {
+                                            msg += Environment.NewLine;
+                                            msg += "Remarks by Administrator: " + admin_approval_remarks + ". ";
+                                        }
+                                        msg += Environment.NewLine;
+                                        msg += "Thank you for interesting in Olaala. You can submit again for Approval using the Sign Up form.";
+                                        msg = clsecom.get_email_content(msg);
+                                        if (clsecom.sendEmailToBrand(id, title, msg, false))
+                                        {
+                                            conn.ExecuteNonQuery("DELETE FROM [dbo].[ecom_staff] where brand_id='" + id + "'");
+                                            conn.ExecuteNonQuery("DELETE FROM [dbo].[ecom_brand] where brand_id='" + id + "'");
+                                            clsecom.SchDeletePic(dtBrand.Rows[0]["icon_url"].ToString().Trim());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        string brand_name = dtBrand.Rows[0]["name_brand_en"].ToString().Trim();
+                                        title = "New Business Status";
+                                        msg = "Status of your Business(" + brand_name + ") is changed to: " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                        if (!clsecom.IsEmpty(admin_approval_remarks))
+                                            msg += "Remarks: " + admin_approval_remarks + ". ";
+                                        msg += "You can submit again for approval by login and using Business Profile form in the App.";
+                                        clsecom.sendPnToBrand("status_change_business_acc", store_id, id, title, title, msg, msg, "");
+
+                                        title = "Business Status Changed to: " + clsecom.getStatusFromKey(admin_approval_status);
+                                        msg = "Status of your Business submitted for approval of Administrator is changed to " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                        if (!clsecom.IsEmpty(admin_approval_remarks))
+                                            msg += "Remarks by Administrator: " + admin_approval_remarks + ". ";
+                                        msg += "You can submit again for approval by login and using Business Profile form in the App.";
+                                        msg = clsecom.get_email_content(msg);
+                                        if (clsecom.sendEmailToBrand(id, title, msg, false))
+                                        {
+                                            query = @"UPDATE [dbo].[ecom_brand] 
+   SET [admin_approval_status] = '" + admin_approval_status + @"'
+,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[updated_by] ='" + staff_id + @"'
+,[updated_on] =getutcdate()
+ WHERE  brand_id='" + id + @"'";
+                                            if (!conn.ExecuteNonQuery(query))
+                                            {
+                                                result.status_msg = "Failed to process. Please try later(Error Code: 2002)";
+                                                return result;
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    string brand_name = dtBrand.Rows[0]["name_brand_en"].ToString().Trim();
+                                    title = "New Business Status";
+                                    msg = "Status of your Business(" + brand_name + ") is changed to: " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                    if (!clsecom.IsEmpty(admin_approval_remarks))
+                                        msg += "Remarks: " + admin_approval_remarks + ". ";
+
+                                    if (admin_approval_status.ToLower().Trim() == "approved")
+                                    {
+                                        if (!is_firebase_account_created)
+                                        {
+                                            msg += "Please Check your email for login details.";
+                                        }
+                                    }
+                                    clsecom.sendPnToBrand("status_change_business_acc", store_id, id, title, title, msg, msg, id);
+                                    title = "Business Status Changed to: " + clsecom.getStatusFromKey(admin_approval_status);
+                                    msg = "Status of your Business submitted for the approval of Administrator is changed to " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                    if (!clsecom.IsEmpty(admin_approval_remarks))
+                                        msg += "Remarks by Administrator: " + admin_approval_remarks + ". ";
+                                    string login_id = "";
+                                    string pw = "";
+                                    if (admin_approval_status.ToLower().Trim() == "approved")
+                                    {
+                                        if (!is_firebase_account_created)
+                                        {
+                                            login_id = dtBrand.Rows[0]["email"].ToString().Trim();
+                                            pw = clsecom.generate_password();
+                                            msg += Environment.NewLine + Environment.NewLine + "Below is the Login Details for login into the Olaala App;" + Environment.NewLine;
+                                            msg += "Login Email: " + login_id + Environment.NewLine + "";
+                                            msg += "Password: " + pw + Environment.NewLine + "";
+
+                                        }
+                                    }
+                                    msg = clsecom.get_email_content(msg);
+                                    if (clsecom.sendEmailToBrand(id, title, msg, false))
+                                    {
+                                        query = @"UPDATE [dbo].[ecom_brand] 
+   SET [admin_approval_status] = '" + admin_approval_status + @"'
+,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[updated_by] ='" + staff_id + @"'
+,[updated_on] =getutcdate()
+ WHERE  brand_id='" + id + @"'";
+                                        if (admin_approval_status.ToLower().Trim() == "approved")
+                                        {
+                                            if (!is_firebase_account_created)
+                                            {
+                                                DataTable dtDataExist = conn.getDataTable(@"SELECT distinct [email]  FROM  [dbo].[ecom_staff] where [brand_id]='" + id + "' and email='" + dtBrand.Rows[0]["email"].ToString().Trim() + @"'");
+                                                if (dtDataExist.Rows.Count == 0)
+                                                {
+                                                    query = @"INSERT INTO [dbo].[ecom_staff]
+           ([brand_id]
+,[store_id]
+           ,[role_type]
+           ,[email] 
+           ,[f_name]
+           ,[l_name] 
+           ,[created_on] 
+           ,[is_active]
+,[firebase_initial_pw])
+     VALUES
+           ('" + id + @"'
+,'" + store_id + @"'
+           ,'business_owner'
+           ,'" + dtBrand.Rows[0]["email"].ToString().Trim() + @"' 
+          ,'" + dtBrand.Rows[0]["f_name_owner"].ToString().Trim() + @"'
+           ,'" + dtBrand.Rows[0]["l_name_owner"].ToString().Trim() + @"' 
+           ,getutcdate() 
+           ,'Y'
+,'" + pw + @"')";
+                                                    if (!conn.ExecuteNonQuery(query))
+                                                    {
+                                                        result.status_msg = "Failed to process. Please try later(Error Code: 2005)";
+                                                        return result;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    query = @"UPDATE [dbo].[ecom_staff]  SET  [firebase_initial_pw] = '" + pw + @"' WHERE brand_id='" + id + "'";
+                                                    if (!conn.ExecuteNonQuery(query))
+                                                    {
+                                                        result.status_msg = "Failed to process. Please try later(Error Code: 2006)";
+                                                        return result;
+                                                    }
+                                                }
+                                                query = @"UPDATE [dbo].[ecom_brand] 
+   SET [admin_approval_status] = '" + admin_approval_status + @"'
+,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[updated_by] ='" + staff_id + @"'
+,[updated_on] =getutcdate() 
+ WHERE  brand_id='" + id + @"'";
+                                            }
+                                        }
+                                        if (!conn.ExecuteNonQuery(query))
+                                        {
+                                            result.status_msg = "Failed to process. Please try later(Error Code: 2002)";
+                                            return result;
+                                        }
+
+
+                                        if (admin_approval_status.ToLower().Trim() == "approved")
+                                        {
+                                            title = "Brand Available";
+                                            msg = "Brand " + brand_name + " is available now in the App!";
+                                            clsecom.sendPnToAllCustomers("new_brand_available", store_id, title, title, msg, msg, id);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (type == "product")
+                            {
+                                title = "New Product Status";
+                                DataTable dtProd = conn.getDataTable("SELECT  [name_en],is_gift_available,is_surprise_gift_available  FROM  [dbo].[ecom_product] where [prod_id]='" + id + @"'");
+                                string product_name = dtProd.Rows[0]["name_en"].ToString().Trim();
+                                msg = "Status of your Product(" + product_name + ") is changed to: " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                if (!clsecom.IsEmpty(admin_approval_remarks))
+                                    msg += "Remarks: " + admin_approval_remarks + ". ";
+                                clsecom.sendPnToBrand("status_change_product", store_id, id, title, title, msg, msg, id);
+
+                                title = "Product Status Changed to: " + clsecom.getStatusFromKey(admin_approval_status);
+                                msg = "Status of your Product(" + product_name + ") submitted for approval of Administrator is changed to " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                if (!clsecom.IsEmpty(admin_approval_remarks))
+                                    msg += "Remarks by Administrator: " + admin_approval_remarks + ". ";
+                                msg = clsecom.get_email_content(msg);
+                                if (clsecom.sendEmailToBrand(id, title, msg, false))
+                                {
+                                    query = @"UPDATE [dbo].[ecom_product] 
+   SET [admin_approval_status] = '" + admin_approval_status + @"'
+,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[updated_by] ='" + staff_id + @"'
+,[updated_on] =getutcdate()
+ WHERE  prod_id='" + id + @"'";
+                                    if (!conn.ExecuteNonQuery(query))
+                                    {
+                                        result.status_msg = "Failed to process. Please try later(Error Code: 2002)";
+                                        return result;
+                                    }
+                                    if (admin_approval_status.ToLower().Trim() == "approved")
+                                    {
+                                        title = "Product Available";
+                                        msg = "Product " + product_name + " is available now!";
+                                        clsecom.sendPnToAllCustomers("new_product_available", store_id, title, title, msg, msg, id);
+
+                                        string is_gift_available = dtProd.Rows[0]["is_gift_available"].ToString().Trim();
+                                        string is_surprise_gift_available = dtProd.Rows[0]["is_surprise_gift_available"].ToString().Trim();
+                                        if (clsecom.get_bool_from_yn(is_gift_available))
+                                        {
+                                            title = "New Gift Product";
+                                            msg = "New Gift Product " + product_name + " is available now!";
+                                            clsecom.sendPnToAllCustomers("new_gift_available", store_id, title, title, msg, msg, id);
+                                        }
+                                        if (clsecom.get_bool_from_yn(is_surprise_gift_available))
+                                        {
+                                            title = "New Surprise Gift Product";
+                                            msg = "New Surprise Gift Product " + product_name + " is available now!";
+                                            clsecom.sendPnToAllCustomers("new_surprise_gift_available", store_id, title, title, msg, msg, id);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (type == "order_cancel")
+                            {
+                                title = "Order Cancel Status";
+                                msg = "Status of your request to Cancel Order is changed to: " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                if (!clsecom.IsEmpty(admin_approval_remarks))
+                                    msg += "Remarks: " + admin_approval_remarks + ". ";
+                                clsecom.sendPnToBrand("status_change_order_cancel_request", store_id, id, title, title, msg, msg, id);
+
+                                title = "Order Cancel Status Changed to: " + clsecom.getStatusFromKey(admin_approval_status);
+                                msg = "Status of your request to cancel the Order is changed to " + clsecom.getStatusFromKey(admin_approval_status) + ". ";
+                                if (!clsecom.IsEmpty(admin_approval_remarks))
+                                    msg += "Remarks by Administrator: " + admin_approval_remarks + ". ";
+                                msg = clsecom.get_email_content(msg);
+                                if (clsecom.sendEmailToCustomer(id, title, msg, false))
+                                {
+                                    query = @"UPDATE [dbo].[ecom_order_cancel] 
+   SET [admin_approval_status] = '" + admin_approval_status + @"'
+,[admin_approval_remarks] = '" + admin_approval_remarks + @"'
+      ,[updated_by] ='" + staff_id + @"'
+,[updated_on] =getutcdate()
+ WHERE  order_cancel_id='" + id + @"'";
+                                    if (!conn.ExecuteNonQuery(query))
+                                    {
+                                        result.status_msg = "Failed to process. Please try later(Error Code: 2002)";
+                                        return result;
+                                    }
+                                }
+                            }
+                            result.status_msg = "";
+                            result.data = "";
+                            result.token_new = clsecomauth.GetNewToken(dev_id);
+                            result.status = "SUCCESS";
+                            break;
+                        }
+                    case "get_requests_for_approval":
+                        {
+                            res_msg = "";
+                            List<EcomreqForApprovalItem> items = clsecom.get_req_for_approval(time_offset, store_id, out res_msg);
+                            result.status_msg = res_msg;
+                            result.data = Newtonsoft.Json.JsonConvert.SerializeObject(items);
+                            result.token_new = clsecomauth.GetNewToken(dev_id);
+                            result.status = "SUCCESS";
+                            break;
+                        }
+
                     case "get_products":
                         {
                             if (clsecom.IsEmpty(token))

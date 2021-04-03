@@ -246,6 +246,21 @@ namespace ecomserv.Ecom
         public string updated_on { get; set; }
         public string is_active { get; set; }
     }
+    public class EcomRegIdItem
+    {
+        public string reg_id { get; set; }
+        public string lang_code { get; set; }
+
+    }
+    public class EcomreqForApprovalItem
+    {
+        public string type { get; set; }
+        public string msg { get; set; }
+        public string id { get; set; }
+        public string date { get; set; }
+        public string admin_approval_status { get; set; }
+        public string admin_approval_remarks { get; set; }
+    }
     public class EcomProductData
     {
         public string prod_id { get; set; }
