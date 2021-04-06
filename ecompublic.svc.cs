@@ -1205,36 +1205,36 @@ r.offer_id=case when '" + offer_id + @"'='' then r.offer_id else '" + offer_id +
                             string custom_size_field9 = "";
                             string custom_size_field10 = "";
 
-                            if (clsecom.get_bool_from_yn(is_custom_size_available))
-                            {
-                                custom_size_img_data = clsecom.get_value(inData.custom_size_img_data);
-                                if (!clsecom.IsEmpty(custom_size_img_data, "Image for Custom Size", out stat))
-                                {
-                                    if (!clsecom.IsEmpty(stat))
-                                        result.status_msg = stat;
-                                    return result;
-                                }
+                            //if (clsecom.get_bool_from_yn(is_custom_size_available))
+                            //{
+                            //    custom_size_img_data = clsecom.get_value(inData.custom_size_img_data);
+                            //    if (!clsecom.IsEmpty(custom_size_img_data, "Image for Custom Size", out stat))
+                            //    {
+                            //        if (!clsecom.IsEmpty(stat))
+                            //            result.status_msg = stat;
+                            //        return result;
+                            //    }
 
-                                bool is_exist = false;
-                                custom_size_img_url = clsecom.EcomSavePicAndGetFileName(custom_size_img_data, out is_exist);
+                            //    bool is_exist = false;
+                            //    custom_size_img_url = clsecom.EcomSavePicAndGetFileName(custom_size_img_data, out is_exist);
 
-                                custom_size_description = clsecom.get_value(inData.custom_size_description);
-                                custom_size_field1 = clsecom.get_value(inData.custom_size_field1);
-                                if (clsecom.IsEmpty(custom_size_field1))
-                                {
-                                    result.status_msg = "Atleast one field is needed for Custom Size";
-                                    return result;
-                                }
-                                custom_size_field2 = clsecom.get_value(inData.custom_size_field2);
-                                custom_size_field3 = clsecom.get_value(inData.custom_size_field3);
-                                custom_size_field4 = clsecom.get_value(inData.custom_size_field4);
-                                custom_size_field5 = clsecom.get_value(inData.custom_size_field5);
-                                custom_size_field6 = clsecom.get_value(inData.custom_size_field6);
-                                custom_size_field7 = clsecom.get_value(inData.custom_size_field7);
-                                custom_size_field8 = clsecom.get_value(inData.custom_size_field8);
-                                custom_size_field9 = clsecom.get_value(inData.custom_size_field9);
-                                custom_size_field10 = clsecom.get_value(inData.custom_size_field10);
-                            }
+                            //    custom_size_description = clsecom.get_value(inData.custom_size_description);
+                            //    custom_size_field1 = clsecom.get_value(inData.custom_size_field1);
+                            //    if (clsecom.IsEmpty(custom_size_field1))
+                            //    {
+                            //        result.status_msg = "Atleast one field is needed for Custom Size";
+                            //        return result;
+                            //    }
+                            //    custom_size_field2 = clsecom.get_value(inData.custom_size_field2);
+                            //    custom_size_field3 = clsecom.get_value(inData.custom_size_field3);
+                            //    custom_size_field4 = clsecom.get_value(inData.custom_size_field4);
+                            //    custom_size_field5 = clsecom.get_value(inData.custom_size_field5);
+                            //    custom_size_field6 = clsecom.get_value(inData.custom_size_field6);
+                            //    custom_size_field7 = clsecom.get_value(inData.custom_size_field7);
+                            //    custom_size_field8 = clsecom.get_value(inData.custom_size_field8);
+                            //    custom_size_field9 = clsecom.get_value(inData.custom_size_field9);
+                            //    custom_size_field10 = clsecom.get_value(inData.custom_size_field10);
+                            //}
                             string is_gift_available = clsecom.get_value(inData.is_gift_available);
                             string is_surprise_gift_available = clsecom.get_value(inData.is_surprise_gift_available);
                             string size_chart_img_url = clsecom.get_value(inData.size_chart_img_url);
@@ -4181,11 +4181,11 @@ where [cust_id]='" + cust_id + @"'";
                             if (clsecom.IsEmpty(admin_approval_status))
                                 return result;
                             res_msg = "";
-                            if (clsecom.IsContainsSpecial(admin_approval_remarks, "Remarks", out res_msg))
-                            {
-                                result.status_msg = res_msg;
-                                return result;
-                            }
+                            //if (clsecom.IsContainsSpecial(admin_approval_remarks, "Remarks", out res_msg))
+                            //{
+                            //    result.status_msg = res_msg;
+                            //    return result;
+                            //}
                             if (type == "ad")
                             {
                                 query = @"UPDATE [dbo].[ecom_ad] 
@@ -4217,7 +4217,7 @@ where [cust_id]='" + cust_id + @"'";
                                 if (admin_approval_status.ToLower().Trim() == "approved")
                                 {
                                     string name_brand_en = dtBrnd.Rows[0]["name_brand_en"].ToString().Trim();
-                                    title = "Ad Available";
+                                    title = "Ad  $('#categoryDropDownList').html('');";
                                     msg = "One Ad of Brand " + name_brand_en + " is available now!";
                                     clsecom.sendPnToAllCustomers("new_ad_available", store_id, title, title, msg, msg, id);
                                 }
